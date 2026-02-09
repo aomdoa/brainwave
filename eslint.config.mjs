@@ -1,0 +1,32 @@
+// @ts-check
+import eslint from '@eslint/js'
+import { defineConfig } from 'eslint/config'
+import tseslint from 'typescript-eslint'
+import globals from 'globals'
+
+export default defineConfig(
+  eslint.configs.recommended,
+
+  {
+    files: ['**/*.ts'],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        projectService: true,
+      },
+      globals: {
+        ...globals.node,
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
+    rules: {
+      // @ts-ignore expected type fun
+      ...tseslint.configs.strictTypeChecked.rules,
+      quotes: ['error', 'single'],
+      indent: ['error', 2],
+      semi: ['error', 'never'],
+    },
+  },
+)
