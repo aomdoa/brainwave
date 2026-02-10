@@ -3,18 +3,19 @@
   "version": "1.0.0",
   "description": "Provide clean REST and interface for collecting and following up on thoughts",
   "main": "dist/index.js",
+  "type": "module",
   "repository": "git@github.com:aomdoa/brainwave.git",
   "author": "David Shurgold <aomdoa@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "clean": "yarn rimraf ./dist",
+    "clean": "yarn rimraf ./dist ./build",
     "start": "node dist/index.js",
     "lint": "yarn eslint --ext .ts ./src",
     "spell": "cspell ./src/**/*.ts",
     "pretty": "prettier --write ./src/**/*.ts",
     "test": "jest",
     "build": "yarn clean && yarn test && yarn lint && yarn pretty && yarn spell && tsc",
-    "package": "fpm -s dir -t deb -n ${name} -v ${version} ./dist=/opt/brainwave",
+    "package": "node _scripts/package.js",
     "dev": "ts-node src/index.ts"
   },
   "devDependencies": {
@@ -25,17 +26,15 @@
     "cspell": "^9.6.4",
     "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
-    "fpm": "^1.5.11",
     "globals": "^17.3.0",
     "jest": "^30.2.0",
     "prettier": "^3.8.1",
     "rimraf": "^6.1.2",
+    "tsc": "^2.0.4",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.55.0"
   },
-  "dependencies": {
-    "tsc": "^2.0.4"
-  }
+  "dependencies": {}
 }
