@@ -9,18 +9,20 @@
   "license": "MIT",
   "scripts": {
     "clean": "yarn rimraf ./dist ./build",
+    "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "lint": "yarn eslint --ext .ts ./src",
     "spell": "cspell ./src/**/*.ts",
     "pretty": "prettier --write ./src/**/*.ts",
     "test": "jest",
     "build": "yarn clean && yarn test && yarn lint && yarn pretty && yarn spell && tsc",
-    "package": "node _scripts/package.js",
-    "dev": "ts-node src/index.ts"
+    "package": "node _scripts/package.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@jest/globals": "^30.2.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.2.2",
     "cspell": "^9.6.4",
@@ -30,11 +32,15 @@
     "jest": "^30.2.0",
     "prettier": "^3.8.1",
     "rimraf": "^6.1.2",
-    "tsc": "^2.0.4",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
+    "tsc": "^2.0.4",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.55.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
 }
