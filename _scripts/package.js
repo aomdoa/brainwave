@@ -28,7 +28,7 @@ mkdirSync(etcBrainwaveDir, { recursive: true })
 cpSync(path.join(__dirname, '../dist'), optBrainwaveDir, { recursive: true })
 copyFileSync(path.join(__dirname, '../package.json'), path.join(optBrainwaveDir, 'package.json'))
 copyFileSync(path.join(__dirname, '../yarn.lock'), path.join(optBrainwaveDir, 'yarn.lock'))
-copyFileSync(path.join(__dirname, '../config/brainwave.json'), path.join(etcBrainwaveDir, 'brainwave.json'))
+copyFileSync(path.join(__dirname, '../config/brainwave.env'), path.join(etcBrainwaveDir, 'brainwave.env'))
 execFileSync('yarn', ['install', '--production', '--frozen-lockfile'], { cwd: optBrainwaveDir, stdio: 'inherit' })
 console.log(packageDir)
 // prettier-ignore
@@ -44,7 +44,7 @@ const args = [
   '--rpm-group', 'brainwave',
   '-m', 'brainwave:brainwave',
   '--prefix', '/',
-  '--config-files', 'etc/opt/brainwave/brainwave.json',
+  '--config-files', 'etc/opt/brainwave/brainwave.env',
   '.',
 ]
 execFileSync('fpm', args, { stdio: 'inherit', cwd: packageDir })

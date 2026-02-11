@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Provide clean REST and interface for collecting and following up on thoughts",
   "main": "dist/index.js",
-  "type": "module",
   "repository": "git@github.com:aomdoa/brainwave.git",
   "author": "David Shurgold <aomdoa@gmail.com>",
   "license": "MIT",
@@ -41,6 +40,8 @@
   },
   "dependencies": {
     "cors": "^2.8.6",
-    "express": "^5.2.1"
+    "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "zod": "^4.3.6"
   }
 }
