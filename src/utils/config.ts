@@ -12,6 +12,7 @@ const schema = z.object({
     .default(
       process.env['NODE_ENV'] ? (process.env['NODE_ENV'] as 'development' | 'production' | 'test') : 'production'
     ),
+  DATABASE_URL: z.string().default('file:./dev.db'),
 })
 
 export const config = schema.parse(process.env)
