@@ -38,11 +38,3 @@ The current plan is break the project into two separate applications one focused
 | name | why                                                                                    |
 | ---- | -------------------------------------------------------------------------------------- |
 | fpm  | Provide a method to package the project for deployment into multiple environment types |
-
-## TODO
-
-- update the routing to redirect based on url
-- initial simple data access
-- REST for the idea
-- create the simple ui for the access into the service
-- complete the README
