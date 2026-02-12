@@ -4,6 +4,7 @@
 import express from 'express'
 import { config } from './utils/config'
 import logger from './utils/logger'
+import { checkLive, checkReady } from './utils/health'
 
 const serviceLog = logger.child({ file: 'index.ts' })
 const app = express()
@@ -26,6 +27,14 @@ app.use((req, res, next) => {
 
 app.get('/', (_req, res) => {
   res.json({ message: 'Brainwave is alive!' })
+})
+
+app.get('/health/live', (_req, res) => {
+  res.json(checkLive())
+})
+
+app.get('/health/ready', (_req, res) => {
+  res.json(checkReady())
 })
 
 app.listen(config.PORT, () => {

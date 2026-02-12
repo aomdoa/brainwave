@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+/**
+ * @copyright 2026 David Shurgold <aomdoa@gmail.com>
+ */
 import { readFileSync, mkdirSync, rmSync, cpSync, copyFileSync, existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
