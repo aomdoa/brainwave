@@ -10,5 +10,5 @@ sudo -u brainwave touch "$DB_PATH"
 sudo -u brainwave -H bash -c '
   export DATABASE_URL="file:/opt/brainwave/prod.db"
   cd /opt/brainwave
-  npx prisma migrate deploy --config prisma/prisma.config.mjs
+  ./node_modules/.bin/prisma migrate deploy --config prisma.config.mjs
 '
