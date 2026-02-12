@@ -23,12 +23,15 @@ const outputFile = path.join(buildDir, `${name}-${snapshotVersion}.rpm`)
 // stage the files for build
 const optBrainwaveDir = path.join(packageDir, 'opt', 'brainwave')
 const etcBrainwaveDir = path.join(packageDir, 'etc', 'opt', 'brainwave')
+const systemdBrainwaveDir = path.join(packageDir, 'etc', 'systemd', 'system')
 mkdirSync(optBrainwaveDir, { recursive: true })
 mkdirSync(etcBrainwaveDir, { recursive: true })
+mkdirSync(systemdBrainwaveDir, { recursive: true })
 cpSync(path.join(__dirname, '../dist'), optBrainwaveDir, { recursive: true })
 copyFileSync(path.join(__dirname, '../package.json'), path.join(optBrainwaveDir, 'package.json'))
 copyFileSync(path.join(__dirname, '../yarn.lock'), path.join(optBrainwaveDir, 'yarn.lock'))
 copyFileSync(path.join(__dirname, '../config/brainwave.env'), path.join(etcBrainwaveDir, 'brainwave.env'))
+copyFileSync(path.join(__dirname, '../config/brainwave.service'), path.join(systemdBrainwaveDir, 'brainwave.service'))
 execFileSync('yarn', ['install', '--production', '--frozen-lockfile'], { cwd: optBrainwaveDir, stdio: 'inherit' })
 console.log(packageDir)
 // prettier-ignore
@@ -43,8 +46,10 @@ const args = [
   '--rpm-user', 'brainwave',
   '--rpm-group', 'brainwave',
   '-m', 'brainwave:brainwave',
+  '--directories', '/opt/brainwave',
   '--prefix', '/',
-  '--config-files', 'etc/opt/brainwave/brainwave.env',
+  '--config-files', '/etc/opt/brainwave/brainwave.env',
+  '--before-install', path.join(__dirname, 'preinstall.sh'),
   '.',
 ]
 execFileSync('fpm', args, { stdio: 'inherit', cwd: packageDir })

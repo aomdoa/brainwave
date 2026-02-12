@@ -1,0 +1,26 @@
+[Unit]
+Description=Brainwave Service
+After=network.target
+
+[Service]
+Type=simple
+User=brainwave
+Group=brainwave
+WorkingDirectory=/opt/brainwave
+EnvironmentFile=/etc/opt/brainwave/brainwave.env
+ExecStart=/usr/bin/node /opt/brainwave/index.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=brainwave
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/brainwave
+
+[Install]
+WantedBy=multi-user.target
