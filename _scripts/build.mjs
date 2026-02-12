@@ -14,10 +14,15 @@ function getGitSha() {
   }
 }
 
-function isRelease() {
+export function isRelease() {
   try {
-    const tag = execSync('git describe --tags --always --dirty').toString().trim()
-    return !tag.includes('-')
+    const output = execSync('git tag --points-at HEAD', {
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .toString()
+      .trim()
+
+    return output.length > 0
   } catch {
     return false
   }

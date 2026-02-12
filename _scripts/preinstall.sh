@@ -1,4 +1,11 @@
 #!/bin/bash
+
+# Check for required binaries
+if [ ! -x "/usr/bin/node" ]; then
+    echo "Required binary /usr/bin/node not found or not executable"
+    exit 1
+fi
+
 if ! getent group brainwave >/dev/null; then
     groupadd --system brainwave
 fi

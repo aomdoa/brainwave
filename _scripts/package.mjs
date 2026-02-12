@@ -31,6 +31,7 @@ mkdirSync(optBrainwaveDir, { recursive: true })
 mkdirSync(etcBrainwaveDir, { recursive: true })
 mkdirSync(systemdBrainwaveDir, { recursive: true })
 cpSync(path.join(__dirname, '../dist'), optBrainwaveDir, { recursive: true })
+cpSync(path.join(__dirname, '../prisma'), path.join(optBrainwaveDir, 'prisma'), { recursive: true })
 copyFileSync(path.join(__dirname, '../package.json'), path.join(optBrainwaveDir, 'package.json'))
 copyFileSync(path.join(__dirname, '../yarn.lock'), path.join(optBrainwaveDir, 'yarn.lock'))
 copyFileSync(path.join(__dirname, '../config/brainwave.env'), path.join(etcBrainwaveDir, 'brainwave.env'))
@@ -53,6 +54,7 @@ const args = [
   '--prefix', '/',
   '--config-files', '/etc/opt/brainwave/brainwave.env',
   '--before-install', path.join(__dirname, 'preinstall.sh'),
+  '--after-install', path.join(__dirname, 'postinstall.sh'),
   '.',
 ]
 execFileSync('fpm', args, { stdio: 'inherit', cwd: packageDir })
