@@ -14,7 +14,7 @@
     "spell": "cspell ./src/**/*.ts",
     "pretty": "prettier --write ./src/**/*.ts",
     "test": "jest",
-    "build": "yarn clean && yarn test && yarn lint && yarn pretty && yarn spell && tsc",
+    "build": "yarn clean && yarn test && yarn lint && yarn pretty && yarn spell && node _scripts/build.mjs && tsc",
     "package": "node _scripts/package.mjs"
   },
   "devDependencies": {
