@@ -1,10 +1,11 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { start as startService } from './service'
+import express from './express'
 
 async function main(): Promise<void> {
-  startService()
+  const app = express.initialize()
+  express.start(app)
 }
 
 main().catch((err) => {
