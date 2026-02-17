@@ -13,6 +13,7 @@ const schema = z.object({
       process.env['NODE_ENV'] ? (process.env['NODE_ENV'] as 'development' | 'production' | 'test') : 'production'
     ),
   DATABASE_URL: z.string().default('file:./dev.db'),
+  PASSWORD_MIN_LENGTH: z.coerce.number().default(12),
 })
 
 export const config = schema.parse(process.env)
