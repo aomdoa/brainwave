@@ -18,6 +18,18 @@ export class ValidationError extends AppError {
   }
 }
 
+export class NotFoundError extends AppError {
+  constructor(message: string) {
+    super(message, 404, true)
+  }
+}
+
+export class ForbbiddenError extends AppError {
+  constructor(message: string) {
+    super(message, 403, true)
+  }
+}
+
 export class ConflictError extends AppError {
   constructor(message: string) {
     super(message, 409, true)
