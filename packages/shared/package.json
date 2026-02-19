@@ -1,0 +1,11 @@
+{
+  "name": "@brainwave/shared",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "clean": "yarn rimraf ./dist",
+    "build": "yarn clean && tsc",
+    "package": "echo not used"
+  }
+}

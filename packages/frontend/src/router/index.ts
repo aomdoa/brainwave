@@ -4,14 +4,16 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import LoginPage from '../components/Login.vue'
 import DashboardPage from '../components/Dashboard.vue'
+import RegisterPage from '../components/Register.vue'
 
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/login' },
   { path: '/login', component: LoginPage },
+  { path: '/register', component: RegisterPage },
   {
     path: '/dashboard',
     component: DashboardPage,
-    meta: { requiresAuth: true }, // mark protected
+    meta: { requiresAuth: true },
   },
 ]
 
@@ -21,7 +23,6 @@ export const router = createRouter({
 })
 
 router.beforeEach((to, _from, next) => {
-  console.log('before each')
   const token = localStorage.getItem('token')
   if (to.meta.requiresAuth && !token) {
     next('/login')

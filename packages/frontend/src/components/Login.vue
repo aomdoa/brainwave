@@ -19,16 +19,24 @@ const login = async () => {
 }
 </script>
 <template>
-  <h1>Login</h1>
-  <div>
-    <label for="email">Email</label>
-    <input id="email" v-model="email" type="text" />
-
-    <label for="password">Password</label>
-    <input id="password" v-model="password" type="password" />
-
-    <button type="submit" @click="login">Login</button>
-  </div>
+  <p>
+    Connect your brain to Brainwave and unlock the full potential of your mind. Log in to access your personalized
+    dashboard, where you can monitor your brain activity, set goals, and explore new ways to enhance your cognitive
+    abilities.
+  </p>
+  <form @submit.prevent="login">
+    <div class="form-group">
+      <label for="email">Email: </label>
+      <input id="email" v-model="email" type="text" />
+    </div>
+    <div class="form-group">
+      <label for="password">Password: </label>
+      <input id="password" v-model="password" type="password" />
+    </div>
+    <div class="form-group actions">
+      <button type="submit">Login</button>
+    </div>
+  </form>
   <a href="/register">Don't have an account? Register here.</a>
 </template>
 

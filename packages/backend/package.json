@@ -1,5 +1,5 @@
 {
-  "name": "brainwave",
+  "name": "@brainwave/backend",
   "version": "1.0.0",
   "description": "Provide clean REST and interface for collecting and following up on thoughts",
   "main": "dist/index.js",

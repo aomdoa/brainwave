@@ -1,26 +1,37 @@
 <template>
-  <div>
+  <div class="header">
     <img src="/brainwave.png" class="logo" alt="Brainwave logo" />
     <span class="title">Brainwave</span>
   </div>
-  <router-view />
+  <div class="main">
+    <router-view />
+  </div>
+  <div class="footer">
+    <p>&copy; 2026 David Shurgold. All rights reserved.</p>
+  </div>
 </template>
 
 <style scoped>
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.main {
+  flex: 1;
+}
+
+.footer {
+  text-align: center;
+}
+
 .logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+  height: 4rem;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
+
 .title {
-  font-size: 2em;
+  font-size: 2rem;
   font-weight: bold;
   color: #646cff;
 }

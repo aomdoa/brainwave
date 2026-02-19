@@ -2,11 +2,11 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { User } from '@prisma/client'
-import { config } from '../utils/config'
 import { ConflictError, NotFoundError, ValidationError } from '../utils/error'
 import { prisma } from '../utils/prisma.config'
 import bcrypt from 'bcryptjs'
 import logger from '../utils/logger'
+import { registerSchema } from '@brainwave/shared'
 
 const serviceLog = logger.child({ file: 'user.service.ts' })
 export type SafeUser = Omit<User, 'password'>
@@ -15,17 +15,16 @@ export async function createUser({
   name,
   email,
   password,
+  confirmPassword,
 }: {
   name: string
   email: string
   password: string
+  confirmPassword: string
 }): Promise<User> {
-  if (!name || !email || !password) {
-    throw new ValidationError('Name, email, and password are required')
-  }
-
-  if (password.length < config.PASSWORD_MIN_LENGTH) {
-    throw new ValidationError(`Password must be at least ${config.PASSWORD_MIN_LENGTH} characters long`)
+  const parsed = registerSchema.safeParse({ name, email, password, confirmPassword })
+  if (!parsed.success) {
+    throw new ValidationError(`Invalid input: ${parsed.error.flatten()}`)
   }
 
   const existingUser = await prisma.user.findUnique({ where: { email } })
