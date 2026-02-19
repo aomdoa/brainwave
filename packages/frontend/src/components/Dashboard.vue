@@ -5,7 +5,7 @@
 import { ref, onMounted } from 'vue'
 import { me } from '../api'
 
-const user = ref<{ id: string; email: string; name?: string } | null>(null)
+const user = ref<{ id: number; email: string; name?: string } | null>(null)
 
 onMounted(async () => {
   user.value = await me()

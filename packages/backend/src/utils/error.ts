@@ -24,7 +24,7 @@ export class NotFoundError extends AppError {
   }
 }
 
-export class ForbbiddenError extends AppError {
+export class ForbiddenError extends AppError {
   constructor(message: string) {
     super(message, 403, true)
   }

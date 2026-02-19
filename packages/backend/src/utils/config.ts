@@ -15,8 +15,9 @@ const schema = z.object({
   DATABASE_URL: z.string().default('file:./dev.db'),
   PASSWORD_MIN_LENGTH: z.coerce.number().default(12),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
-  JWT_SECRET: z.string().default('dadave'),
+  JWT_SECRET: z.string().default('dave'),
   JWT_EXPIRES_IN: z.string().default('1h'),
 })
 
 export const config = schema.parse(process.env)
+export default config
