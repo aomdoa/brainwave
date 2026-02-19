@@ -2,6 +2,7 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import axios from 'axios'
+import config from './utils/config'
 
 export interface User {
   id: number
@@ -10,8 +11,7 @@ export interface User {
   createdAt?: string
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5005'
-const api = axios.create({ baseURL: API_BASE_URL })
+const api = axios.create({ baseURL: config.VITE_API_URL })
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')

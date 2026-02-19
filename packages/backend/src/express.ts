@@ -5,7 +5,7 @@ import express, { Express, ErrorRequestHandler, Response, NextFunction } from 'e
 import cors from 'cors'
 import { config } from './utils/config'
 import logger from './utils/logger'
-import { AppError, ForbbiddenError, ValidationError } from './utils/error'
+import { AppError, ForbiddenError, ValidationError } from './utils/error'
 import { registerAuthRoutes } from './routes/auth.route'
 import { registerHealthRoutes } from './routes/health.route'
 import jwt from 'jsonwebtoken'
@@ -82,7 +82,7 @@ export function authMiddleware(req: AuthRequest, _res: Response, next: NextFunct
     req.userId = payload.userId
     return next()
   } catch {
-    throw new ForbbiddenError('Invalid token')
+    throw new ForbiddenError('Invalid token')
   }
 }
 

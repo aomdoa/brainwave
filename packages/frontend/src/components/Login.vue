@@ -12,7 +12,7 @@ const router = useRouter()
 
 const login = async () => {
   window.alert(`Logging in with ${email.value} and ${password.value}`)
-  const result = await apiLogin(email.value, password.value).catch((err) => {
+  await apiLogin(email.value, password.value).catch((err) => {
     window.alert(`Login failed: ${err.message}`)
   })
   router.push('/dashboard')
