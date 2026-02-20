@@ -6,7 +6,7 @@ import { createUser, getUser, loginUser } from '../services/user.service'
 import { signToken } from '../utils/jwt'
 import { authMiddleware, AuthRequest } from '../express'
 import { config } from '../utils/config'
-import { RegisterConfig } from '../../../shared/src/register.schema'
+import { RegisterConfig } from '@brainwave/shared'
 
 export function registerAuthRoutes(app: Express): void {
   app.post('/register', async (req, res, next) => {

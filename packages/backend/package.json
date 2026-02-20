@@ -1,5 +1,6 @@
 {
   "name": "@brainwave/backend",
+  "rpmName": "brainwave-backend",
   "version": "1.0.0",
   "description": "Provide clean REST and interface for collecting and following up on thoughts",
   "main": "dist/index.js",
@@ -46,6 +47,7 @@
     "typescript-eslint": "^8.55.0"
   },
   "dependencies": {
+    "@brainwave/shared": "^1.0.0",
     "@prisma/adapter-better-sqlite3": "^7.4.0",
     "@prisma/client": "^7.4.0",
     "@types/ms": "^2.1.0",

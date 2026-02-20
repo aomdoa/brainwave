@@ -42,7 +42,9 @@ const login = async () => {
       <button type="submit">Login</button>
     </div>
   </form>
-  <a href="/register">Don't have an account? Register here.</a>
+  <router-link to="/register">
+    Don't have an account? Register <span style="text-decoration: underline">here</span>.
+  </router-link>
 </template>
 
 <style scoped></style>

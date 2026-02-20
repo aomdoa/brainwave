@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": "./src",
     "module": "NodeNext",
     "target": "ES2024",
     "types": ["node"],
@@ -9,10 +10,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "moduleResolution": "NodeNext",
-    "isolatedModules": true,
-    "paths": {
-      "@brainwave/shared": ["../shared/src"]
-    }
+    "isolatedModules": true
   },
   "include": ["src"]
 }
