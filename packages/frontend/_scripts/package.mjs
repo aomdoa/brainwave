@@ -24,21 +24,9 @@ const snapshotVersion = `${version}.SNAPSHOT.${timestamp}`
 const outputFile = path.join(buildDir, `${name}-${snapshotVersion}.rpm`)
 
 // stage the files for build
-const optBrainwaveDir = path.join(packageDir, 'opt', 'brainwave')
-const etcBrainwaveDir = path.join(packageDir, 'etc', 'opt', 'brainwave')
-const systemdBrainwaveDir = path.join(packageDir, 'etc', 'systemd', 'system')
-mkdirSync(optBrainwaveDir, { recursive: true })
-mkdirSync(etcBrainwaveDir, { recursive: true })
-mkdirSync(systemdBrainwaveDir, { recursive: true })
-cpSync(path.join(__dirname, '../dist'), optBrainwaveDir, { recursive: true })
-cpSync(path.join(__dirname, '../prisma'), path.join(optBrainwaveDir, 'prisma'), { recursive: true })
-copyFileSync(path.join(__dirname, '../package.json'), path.join(optBrainwaveDir, 'package.json'))
-copyFileSync(path.join(__dirname, '../../../yarn.lock'), path.join(optBrainwaveDir, 'yarn.lock'))
-copyFileSync(path.join(__dirname, '../config/brainwave.env'), path.join(etcBrainwaveDir, 'brainwave.env'))
-copyFileSync(path.join(__dirname, '../config/brainwave.service'), path.join(systemdBrainwaveDir, 'brainwave.service'))
-//execFileSync('yarn', ['install', '--production', '--frozen-lockfile'], { cwd: optBrainwaveDir, stdio: 'inherit' })
-execFileSync('yarn', ['install', '--production'], { cwd: optBrainwaveDir, stdio: 'inherit' })
-console.log(packageDir)
+const srvBrainwaveDir = path.join(packageDir, 'srv', 'brainwave')
+mkdirSync(srvBrainwaveDir, { recursive: true })
+cpSync(path.join(__dirname, '../dist'), srvBrainwaveDir, { recursive: true })
 // prettier-ignore
 const args = [
   '-s', 'dir',
@@ -51,11 +39,9 @@ const args = [
   '--rpm-user', 'brainwave',
   '--rpm-group', 'brainwave',
   '-m', 'brainwave:brainwave',
-  '--directories', '/opt/brainwave',
+  '--directories', '/srv/brainwave',
   '--prefix', '/',
-  '--config-files', '/etc/opt/brainwave/brainwave.env',
   '--before-install', path.join(__dirname, 'preinstall.sh'),
-  '--after-install', path.join(__dirname, 'postinstall.sh'),
   '.',
 ]
 execFileSync('fpm', args, { stdio: 'inherit', cwd: packageDir })

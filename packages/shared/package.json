@@ -11,10 +11,13 @@
       "require": "./dist/index.js"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "clean": "yarn rimraf ./dist",
     "build": "yarn clean && tsup src/index.ts --format esm,cjs --dts --out-dir dist",
-    "package": "echo not used"
+    "package": "npm unpublish -f @brainwave/shared@$npm_package_version --registry http://localhost:4873 && npm publish --registry http://localhost:4873"
   },
   "devDependencies": {
     "tsup": "^8.5.1"

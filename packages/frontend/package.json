@@ -1,14 +1,15 @@
 {
   "name": "@brainwave/frontend",
+  "rpmName": "brainwave-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "clean": "rimraf ./dist",
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "build": "yarn clean && node _scripts/build.mjs && vue-tsc -b && vite build --mode production",
     "preview": "vite preview",
-    "package": "echo todo"
+    "package": "node _scripts/package.mjs"
   },
   "dependencies": {
     "axios": "^1.13.5",
@@ -22,10 +23,10 @@
     "@vue/tsconfig": "^0.8.1",
     "rimraf": "^6.1.3",
     "typescript": "~5.9.3",
-    "vite": "^8.0.0-beta.13",
+    "vite": "^8.0.0-beta.14",
     "vue-tsc": "^3.1.5"
   },
   "overrides": {
-    "vite": "^8.0.0-beta.13"
+    "vite": "^8.0.0-beta.14"
   }
 }
