@@ -2,14 +2,18 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { login as apiLogin } from '../api'
 
+const router = useRouter()
 const email = ref('')
 const password = ref('')
-const router = useRouter()
+const welcomeName = ref('')
 
+onMounted(() => {
+  welcomeName.value = (router.options.history.state?.userName as string) ?? ''
+})
 const login = async () => {
   window.alert(`Logging in with ${email.value} and ${password.value}`)
   await apiLogin(email.value, password.value).catch((err) => {
@@ -19,16 +23,25 @@ const login = async () => {
 }
 </script>
 <template>
-  <h1>Login</h1>
-  <div>
-    <label for="email">Email</label>
-    <input id="email" v-model="email" type="text" />
-
-    <label for="password">Password</label>
-    <input id="password" v-model="password" type="password" />
-
-    <button type="submit" @click="login">Login</button>
-  </div>
+  <p>
+    Connect your brain to Brainwave and unlock the full potential of your mind. Log in to access your personalized
+    dashboard, where you can monitor your brain activity, set goals, and explore new ways to enhance your cognitive
+    abilities.
+  </p>
+  <p v-if="welcomeName">Welcome {{ welcomeName }}! Please log in to continue.</p>
+  <form @submit.prevent="login">
+    <div class="form-group">
+      <label for="email">Email: </label>
+      <input id="email" v-model="email" type="text" />
+    </div>
+    <div class="form-group">
+      <label for="password">Password: </label>
+      <input id="password" v-model="password" type="password" />
+    </div>
+    <div class="form-group actions">
+      <button type="submit">Login</button>
+    </div>
+  </form>
   <a href="/register">Don't have an account? Register here.</a>
 </template>
 

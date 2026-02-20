@@ -1,5 +1,5 @@
 {
-  "name": "brainwave",
+  "name": "@brainwave/backend",
   "version": "1.0.0",
   "description": "Provide clean REST and interface for collecting and following up on thoughts",
   "main": "dist/index.js",
@@ -8,7 +8,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "yarn rimraf ./dist ./build ./coverage",
-    "dev": "yarn prisma:generate && tsx watch src/index.ts",
+    "dev": "yarn prisma:generate && nodemon --watch src --ext ts --exec tsx src/index.ts",
     "start": "node dist/index.js",
     "lint": "yarn eslint --ext .ts ./src",
     "spell": "cspell ./src/**/*.ts",
@@ -35,6 +35,7 @@
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.3.0",
     "jest": "^30.2.0",
+    "nodemon": "^3.1.13",
     "prettier": "^3.8.1",
     "rimraf": "^6.1.2",
     "ts-jest": "^29.4.6",

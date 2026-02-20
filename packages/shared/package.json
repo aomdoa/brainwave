@@ -1,0 +1,22 @@
+{
+  "name": "@brainwave/shared",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "clean": "yarn rimraf ./dist",
+    "build": "yarn clean && tsup src/index.ts --format esm,cjs --dts --out-dir dist",
+    "package": "echo not used"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  }
+}

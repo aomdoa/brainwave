@@ -13,6 +13,7 @@ const schema = z.object({
       process.env['NODE_ENV'] ? (process.env['NODE_ENV'] as 'development' | 'production' | 'test') : 'production'
     ),
   DATABASE_URL: z.string().default('file:./dev.db'),
+  NAME_MIN_LENGTH: z.coerce.number().default(5),
   PASSWORD_MIN_LENGTH: z.coerce.number().default(12),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
   JWT_SECRET: z.string().default('dave'),
