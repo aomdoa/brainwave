@@ -60,12 +60,10 @@ export async function getAuthConfig(): Promise<RegisterConfig> {
 
 // Register the new user
 export async function registerUser(registration: RegisterInput): Promise<User> {
-  console.log('register')
   const response = await api.post('/register', registration)
   if (response.statusText !== 'OK') {
     throw new Error(`Failed to register user: ${response.statusText}`)
   }
-  console.dir(response.data)
   return response.data as User
 }
 
