@@ -57,6 +57,12 @@ a:hover {
   justify-content: flex-end;
 }
 
+.field-error {
+  color: #ff4d4f;
+  font-size: 0.875em;
+  margin-top: 0.25em;
+}
+
 /* Buttons */
 button {
   border-radius: 8px;

@@ -4,6 +4,7 @@
 import axios from 'axios'
 import config from './utils/config'
 import { router } from './router'
+import type { RegisterConfig, RegisterInput } from '@brainwave/shared'
 
 export interface User {
   id: number
@@ -34,6 +35,7 @@ api.interceptors.response.use(
   }
 )
 
+// Perform the login request, store the token, and return the user info
 export async function login(email: string, password: string): Promise<User> {
   const response = await api.post('/login', { email, password })
   const data = response.data as { token: string }
@@ -44,9 +46,27 @@ export async function login(email: string, password: string): Promise<User> {
   return me()
 }
 
+// Get our user info
 export async function me(): Promise<User> {
   const response = await api.get('/me')
   return response.data.user as User
+}
+
+// Get the authentication config
+export async function getAuthConfig(): Promise<RegisterConfig> {
+  const response = await api.get('/auth/config')
+  return response.data as RegisterConfig
+}
+
+// Register the new user
+export async function registerUser(registration: RegisterInput): Promise<User> {
+  console.log('register')
+  const response = await api.post('/register', registration)
+  if (response.statusText !== 'OK') {
+    throw new Error(`Failed to register user: ${response.statusText}`)
+  }
+  console.dir(response.data)
+  return response.data as User
 }
 
 export default api

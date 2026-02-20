@@ -9,7 +9,7 @@
   "private": true,
   "scripts": {
     "clean": "yarn workspaces run clean",
-    "dev": "concurrently -k -n API,WEB -c blue,green \"yarn workspace brainwave-backend dev\" \"yarn workspace brainwave-frontend dev\"",
+    "dev": "concurrently -k -n API,WEB -c blue,green \"yarn workspace @brainwave/backend dev\" \"yarn workspace @brainwave/frontend dev\"",
     "build": "yarn workspaces run build",
     "package": "yarn workspaces run package"
   },

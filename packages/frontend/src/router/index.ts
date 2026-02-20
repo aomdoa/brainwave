@@ -5,11 +5,13 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import LoginPage from '../components/Login.vue'
 import DashboardPage from '../components/Dashboard.vue'
 import RegisterPage from '../components/Register.vue'
+import ErrorPage from '../components/Error.vue'
 
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/login' },
   { path: '/login', component: LoginPage },
   { path: '/register', component: RegisterPage },
+  { path: '/error', component: ErrorPage },
   {
     path: '/dashboard',
     component: DashboardPage,

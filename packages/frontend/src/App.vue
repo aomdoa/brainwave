@@ -1,7 +1,7 @@
 <template>
   <div class="header">
     <img src="/brainwave.png" class="logo" alt="Brainwave logo" />
-    <span class="title">Brainwave</span>
+    <a href="/" class="title">Brainwave</a>
   </div>
   <div class="main">
     <router-view />
