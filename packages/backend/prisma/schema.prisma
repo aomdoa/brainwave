@@ -8,19 +8,112 @@ generator client {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  name     String
-  email    String   @unique
-  password String   // Hashed password 
-  thoughts Thought[]
+  userId    Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  thoughts      Thought[]      @relation("ThoughtToUser")
+  tags          Tag[]          @relation("UserToTag")
+  thoughtGroups ThoughtGroup[] @relation("UserToThoughtGroup")
 }
 
 model Thought {
-  id        Int      @id @default(autoincrement())
+  thoughtId Int    @id @default(autoincrement())
   title     String
   body      String
+  status    Status @default(ACTIVE)
+
+  createdAt    DateTime  @default(now())
+  lastUpdated  DateTime  @updatedAt
+  lastFollowUp DateTime?
+  nextReminder DateTime?
+
+  // Ownership
+  userId Int
+  user   User @relation("ThoughtToUser", fields: [userId], references: [userId], onDelete: Cascade)
+
+  // Tags (many-to-many)
+  tags Tag[] @relation("TagToThought")
+
+  // Graph relations
+  thoughtRelationsOne ThoughtRelation[] @relation("RelationThoughtOne")
+  thoughtRelationsTwo ThoughtRelation[] @relation("RelationThoughtTwo")
+
+  // Group association
+  thoughtGroups ThoughtGroup[] @relation("ThoughtToThoughtGroup")
+
+  @@index([userId])
+}
+
+model Tag {
+  tagId Int    @id @default(autoincrement())
+  name  String
+  notes String?
+
   createdAt DateTime @default(now())
-  authorId  Int
-  author    User     @relation(fields: [authorId], references: [id])
+  updatedAt DateTime @updatedAt
+
+  // Ownership
+  userId Int
+  user   User @relation("UserToTag", fields: [userId], references: [userId], onDelete: Cascade)
+
+  // Relations
+  thoughts Thought[] @relation("TagToThought")
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+model ThoughtRelation {
+  thoughtRelationId Int          @id @default(autoincrement())
+  relationType      RelationType @default(RELATED)
+  notes             String?
+
+  createdAt DateTime @default(now())
+
+  thoughtOneId Int
+  thoughtTwoId Int
+
+  thoughtOne Thought @relation("RelationThoughtOne", fields: [thoughtOneId], references: [thoughtId], onDelete: Cascade)
+  thoughtTwo Thought @relation("RelationThoughtTwo", fields: [thoughtTwoId], references: [thoughtId], onDelete: Cascade)
+
+  @@unique([thoughtOneId, thoughtTwoId])
+  @@index([thoughtOneId])
+  @@index([thoughtTwoId])
+}
+
+model ThoughtGroup {
+  thoughtGroupId Int    @id @default(autoincrement())
+  name           String
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Ownership
+  userId Int
+  user   User @relation("UserToThoughtGroup", fields: [userId], references: [userId], onDelete: Cascade)
+
+  // Relations
+  thoughts Thought[] @relation("ThoughtToThoughtGroup")
+
+  @@index([userId])
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  CLOSED
+}
+
+enum RelationType {
+  RELATED
+  CAUSES
+  CONTRADICTS
+  SUPPORTS
+  DERIVES_FROM
 }
