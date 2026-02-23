@@ -1,11 +1,12 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { Express } from 'express'
+import { Router } from 'express'
 import { checkLive, checkReady } from '../services/health.service'
 
-export function registerHealthRoutes(app: Express): void {
-  app.get('/health/live', (_req, res, next) => {
+export function registerHealthRoutes(): Router {
+  const router = Router()
+  router.get('/live', (_req, res, next) => {
     try {
       res.json(checkLive())
     } catch (err) {
@@ -13,11 +14,12 @@ export function registerHealthRoutes(app: Express): void {
     }
   })
 
-  app.get('/health/ready', (_req, res, next) => {
+  router.get('/ready', (_req, res, next) => {
     try {
       res.json(checkReady())
     } catch (err) {
       next(err)
     }
   })
+  return router
 }

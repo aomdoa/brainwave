@@ -16,6 +16,10 @@ const schema = z.object({
   NAME_MIN_LENGTH: z.coerce.number().default(5),
   PASSWORD_MIN_LENGTH: z.coerce.number().default(12),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  THOUGHT_TITLE_MIN_LENGTH: z.coerce.number().default(5),
+  THOUGHT_TITLE_MAX_LENGTH: z.coerce.number().default(254),
+  THOUGHT_BODY_MIN_LENGTH: z.coerce.number().default(0),
+  THOUGHT_BODY_MAX_LENGTH: z.coerce.number().default(65535),
   JWT_SECRET: z.string().default('dave'),
   JWT_EXPIRES_IN: z.string().default('1h'),
 })

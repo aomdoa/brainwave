@@ -48,6 +48,9 @@ export async function createUser(input: RegisterInput): Promise<SafeUser> {
 }
 
 export async function loginUser({ email, password }: { email: string; password: string }): Promise<SafeUser> {
+  if (email == null || password == null) {
+    throw new ValidationError('Please provide the email and password')
+  }
   const user = await prisma.user.findUnique({ where: { email } })
   if (!user) {
     throw new ValidationError('Invalid email or password')
@@ -65,8 +68,8 @@ export async function loginUser({ email, password }: { email: string; password: 
 
 export async function getUser(userId: number): Promise<SafeUser> {
   const user = (await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, email: true, name: true, createdAt: true },
+    where: { userId },
+    select: { userId: true, email: true, name: true, createdAt: true },
   })) as SafeUser
 
   if (!user) {

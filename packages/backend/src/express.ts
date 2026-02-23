@@ -9,6 +9,7 @@ import { AppError, ForbiddenError, ValidationError } from './utils/error'
 import { registerAuthRoutes } from './routes/auth.route'
 import { registerHealthRoutes } from './routes/health.route'
 import jwt from 'jsonwebtoken'
+import { registerThoughtRoute } from './routes/thought.route'
 
 const serviceLog = logger.child({ file: 'express.ts' })
 export interface AuthRequest extends express.Request {
@@ -23,8 +24,13 @@ export function initialize(): Express {
   const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     const status = err.status ?? 500
     const expose = (err as AppError).expose ?? false
-
-    res.status(status).json({ message: expose ? err.message : 'Internal Server Error' })
+    if (expose) {
+      const details = typeof (err as any).toJSON === 'function' ? (err as any).toJSON() : { message: err.message }
+      res.status(status).json(details)
+    } else {
+      res.status(status).json({ message: 'Internal Server Error' })
+    }
+    if (!expose) serviceLog.error(err)
   }
 
   app.use(express.json())
@@ -50,8 +56,9 @@ export function initialize(): Express {
   }
 
   // Register routes
-  registerAuthRoutes(app)
-  registerHealthRoutes(app)
+  app.use('/auth', registerAuthRoutes())
+  app.use('/thoughts', registerThoughtRoute())
+  app.use('/health', registerHealthRoutes())
 
   // Capture the errors
   app.use(errorHandler)
