@@ -29,7 +29,7 @@ model Thought {
   status    Status @default(ACTIVE)
 
   createdAt    DateTime  @default(now())
-  lastUpdated  DateTime  @updatedAt
+  updatedAt    DateTime  @updatedAt
   lastFollowUp DateTime?
   nextReminder DateTime?
 

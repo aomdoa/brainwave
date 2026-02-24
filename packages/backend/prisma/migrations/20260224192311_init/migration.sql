@@ -15,7 +15,7 @@ CREATE TABLE "Thought" (
     "body" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'ACTIVE',
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "lastUpdated" DATETIME NOT NULL,
+    "updatedAt" DATETIME NOT NULL,
     "lastFollowUp" DATETIME,
     "nextReminder" DATETIME,
     "userId" INTEGER NOT NULL,

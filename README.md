@@ -6,6 +6,10 @@ Application that supports the capture and follow up on thoughts and ideas ensuri
 
 Contains two prjects (packages/backend and packages/frontend) to provide the full solution and deployment. The backend focus will provide the API for access and operations on the data with the frontend providing the proper user interface that supports web and mobile access.
 
+### Verdaccio
+
+To help support the build and usage of the @brainwave/shared I recommend using verdaccio to provide a simple local repo to help test local development changes. Simply install it globally and follow their https://www.verdaccio.org/ instructions for the setup.
+
 ## Backend
 
 The backend is deployed with only exposure for the API portion of the service which is used by the UI for proper, safe and secure data access and changes.

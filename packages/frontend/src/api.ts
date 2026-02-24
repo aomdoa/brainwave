@@ -37,7 +37,7 @@ api.interceptors.response.use(
 
 // Perform the login request, store the token, and return the user info
 export async function login(email: string, password: string): Promise<User> {
-  const response = await api.post('/login', { email, password })
+  const response = await api.post('/auth/login', { email, password })
   const data = response.data as { token: string }
   if (!data.token) {
     throw new Error('Login failed: missing token in response')
@@ -48,8 +48,8 @@ export async function login(email: string, password: string): Promise<User> {
 
 // Get our user info
 export async function me(): Promise<User> {
-  const response = await api.get('/me')
-  return response.data.user as User
+  const response = await api.get('/auth/me')
+  return response.data as User
 }
 
 // Get the authentication config
@@ -60,7 +60,7 @@ export async function getAuthConfig(): Promise<RegisterConfig> {
 
 // Register the new user
 export async function registerUser(registration: RegisterInput): Promise<User> {
-  const response = await api.post('/register', registration)
+  const response = await api.post('/auth/register', registration)
   if (response.statusText !== 'OK') {
     throw new Error(`Failed to register user: ${response.statusText}`)
   }
