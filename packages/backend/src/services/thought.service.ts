@@ -3,10 +3,10 @@
  */
 
 import { Status, Thought } from '@prisma/client'
-import { createThoughtSchema } from '@brainwave/shared'
+import { createThoughtSchema, createThoughtSearchSchema, FilterCondition, SearchPageResults } from '@brainwave/shared'
 import { config } from '../utils/config'
 import { NotFoundError, ValidationError } from '../utils/error'
-import { prisma } from '../utils/prisma.config'
+import { buildPrismaWhere, prisma } from '../utils/prisma'
 import logger from '../utils/logger'
 
 const serviceLog = logger.child({ file: 'thought.service.ts' })
@@ -84,4 +84,41 @@ export async function deleteThought(thoughtId: number, userId: number): Promise<
   }
   serviceLog.debug(`deleteThought ${JSON.stringify(thought)}`)
   return thought
+}
+
+export async function searchThoughts(
+  rawSearch: unknown,
+  userId: number
+): Promise<{ data: Thought[]; page: SearchPageResults }> {
+  const schema = createThoughtSearchSchema({
+    pageSizeMaximum: config.PAGE_SIZE_MAXIMUM,
+    pageSizeDefault: config.PAGE_SIZE_DEFAULT,
+  })
+  const parsed = schema.safeParse(rawSearch)
+  if (!parsed.success) {
+    throw new ValidationError('Invalid input', parsed.error)
+  }
+
+  const search = buildPrismaWhere(parsed.data.filter as FilterCondition[], ['title', 'body'], parsed.data.search)
+  const where = { userId, ...search }
+
+  const [thoughts, count] = await prisma.$transaction([
+    prisma.thought.findMany({
+      where,
+      orderBy: { [parsed.data.orderBy.field]: parsed.data.orderBy.direction },
+      skip: (parsed.data.page - 1) * parsed.data.size,
+      take: parsed.data.size,
+    }),
+    prisma.thought.count({ where }),
+  ])
+
+  return {
+    data: thoughts,
+    page: {
+      current: parsed.data.page,
+      size: thoughts.length,
+      totalElements: count,
+      totalPages: Math.ceil(count / parsed.data.size),
+    },
+  }
 }

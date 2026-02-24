@@ -3,7 +3,7 @@
  */
 import { User } from '@prisma/client'
 import { ConflictError, NotFoundError, ValidationError } from '../utils/error'
-import { prisma } from '../utils/prisma.config'
+import { prisma } from '../utils/prisma'
 import bcrypt from 'bcryptjs'
 import logger from '../utils/logger'
 import { createRegisterSchema, type RegisterInput } from '@brainwave/shared'
@@ -25,7 +25,7 @@ export async function createUser(input: RegisterInput): Promise<SafeUser> {
   })
   const parsed = registerSchema.safeParse(input)
   if (!parsed.success) {
-    throw new ValidationError(`Invalid input: ${parsed.error.message}`)
+    throw new ValidationError('Invalid input', parsed.error)
   }
 
   const existingUser = await prisma.user.findUnique({ where: { email: parsed.data.email } })

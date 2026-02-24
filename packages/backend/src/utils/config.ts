@@ -20,6 +20,8 @@ const schema = z.object({
   THOUGHT_TITLE_MAX_LENGTH: z.coerce.number().default(254),
   THOUGHT_BODY_MIN_LENGTH: z.coerce.number().default(0),
   THOUGHT_BODY_MAX_LENGTH: z.coerce.number().default(65535),
+  PAGE_SIZE_DEFAULT: z.coerce.number().default(25),
+  PAGE_SIZE_MAXIMUM: z.coerce.number().default(100),
   JWT_SECRET: z.string().default('dave'),
   JWT_EXPIRES_IN: z.string().default('1h'),
 })

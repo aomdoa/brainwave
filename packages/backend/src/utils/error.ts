@@ -27,7 +27,7 @@ export class AppError extends Error {
 export class ValidationError extends AppError {
   details?: Array<{ field: string; issue: string }>
 
-  constructor(message: string, zodError?: unknown) {
+  constructor(message: string, zodError?: ZodError | { field: string; issue: string; code: string }) {
     super(message, 400, true)
     if (zodError instanceof ZodError) {
       this.details = zodError.issues.map((e) => ({

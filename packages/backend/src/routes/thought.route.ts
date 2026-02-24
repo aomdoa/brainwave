@@ -2,11 +2,12 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { Router } from 'express'
-import { authMiddleware, AuthRequest } from '../express'
+import { authMiddleware, AuthRequest, buildPageLink } from '../utils/express'
 import {
   createThought,
   deleteThought,
   getThought,
+  searchThoughts,
   updateThought,
   UpdateThought,
   type CreateThought,
@@ -64,16 +65,24 @@ export function registerThoughtRoute(): Router {
     }
   })
 
-  router.get('/', async (req: AuthRequest, res, next) => {
+  /**
+   * { data, meta, links }
+   *
+   * GET /thoughts?search=project&filter=status eq 'ACTIVE' and nextReminder lt '2026-03-01'&orderBy=nextReminder:asc&page=1&size=25
+   */
+
+  router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
-      /**
-       * const thoughts = await prisma.thought.findMany({
-  where: { status: req.query.status, userId: Number(req.query.userId) },
-  orderBy: { createdAt: 'desc' },
-  take: Number(req.query.limit ?? 10),
-})
-       */
-      return res.json({ error: 'todo' })
+      const { data, page } = await searchThoughts(req.query, req.userId ?? 0)
+      const links = {
+        self: buildPageLink(req, page.current),
+        first: buildPageLink(req, 1),
+        last: buildPageLink(req, page.totalPages),
+        prev: page.current > 1 ? buildPageLink(req, page.current - 1) : undefined,
+        next: page.current < page.totalPages ? buildPageLink(req, page.current + 1) : undefined,
+      }
+
+      return res.json({ data, page, links })
     } catch (err) {
       return next(err)
     }

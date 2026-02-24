@@ -4,7 +4,7 @@
 import { Router } from 'express'
 import { createUser, getUser, loginUser } from '../services/user.service'
 import { signToken } from '../utils/jwt'
-import { authMiddleware, AuthRequest } from '../express'
+import { authMiddleware, AuthRequest } from '../utils/express'
 import { config } from '../utils/config'
 import { RegisterConfig } from '@brainwave/shared'
 
