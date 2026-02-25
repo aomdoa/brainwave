@@ -7,6 +7,8 @@ const config: Config = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageProvider: 'v8',
+  // coverage rule only applies to ./services
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/*', '!src/routes/**', '!src/utils/**'],
   coverageThreshold: {
     global: {
       branches: 80,

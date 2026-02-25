@@ -24,7 +24,7 @@ export const createThoughtSchema = (config: ThoughtConfig) =>
 
 export type ThoughtInput = z.infer<ReturnType<typeof createThoughtSchema>>
 
-export const THOUGHT_SEARCH_FILTERS = ['status', 'createdAt', 'lastUpdated', 'lastFollowUp', 'nextReminder']
+export const THOUGHT_SEARCH_FILTERS = ['status', 'createdAt', 'updatedAt', 'lastFollowUp', 'nextReminder']
 export const THOUGHT_SEARCH_ORDERS = ['title', ...THOUGHT_SEARCH_FILTERS]
 
 export const createThoughtSearchSchema = (config: SearchResultConfig) =>

@@ -3,11 +3,11 @@
  */
 import { buildInfo } from '../build-info'
 
-type LiveStatus = {
+export type LiveStatus = {
   status: string
 }
 
-type ReadyStatus = LiveStatus & {
+export type ReadyStatus = LiveStatus & {
   buildInfo: {
     version: string
     buildTime: string
@@ -19,13 +19,13 @@ type ReadyStatus = LiveStatus & {
   uptime: number
 }
 
-function checkLive(): LiveStatus {
+export function checkLive(): LiveStatus {
   return {
     status: 'ok',
   }
 }
 
-function checkReady(): ReadyStatus {
+export function checkReady(): ReadyStatus {
   return {
     status: 'ok', // TODO - add real checks for dependencies
     buildInfo: buildInfo,
@@ -36,4 +36,4 @@ function checkReady(): ReadyStatus {
   }
 }
 
-export { checkLive, checkReady, type LiveStatus, type ReadyStatus }
+export default { checkLive, checkReady }
