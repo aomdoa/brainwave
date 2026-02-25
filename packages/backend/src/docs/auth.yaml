@@ -1,0 +1,154 @@
+openapi: 3.0.0
+info:
+  title: Brainwave Auth API
+  version: 1.0.0
+  description: Authentication endpoints for Brainwave service
+servers:
+  - url: https://api.brainwave.com/v1
+tags:
+  - name: Auth
+    description: Endpoints for the authentication and user management
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      description: Create a new account in the system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: Successfully created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login a user
+      description: Authenticate a user and return a JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: JWT token returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        '401':
+          description: Invalid credentials
+
+  /auth/me:
+    get:
+      tags:
+        - Auth
+      summary: Get current user
+      description: Retrieve information about the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+
+  /auth/config:
+    get:
+      tags:
+        - Auth
+      summary: Get registration config
+      description: Returns server-side registration rules.
+      responses:
+        '200':
+          description: Registration config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterConfig'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        userId:
+          type: string
+          example: '123'
+        name:
+          type: string
+          example: 'Alice'
+        email:
+          type: string
+          example: 'alice@example.com'
+
+    RegisterRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+        - confirmPassword
+      properties:
+        name:
+          type: string
+          example: 'Alice'
+        email:
+          type: string
+          example: 'alice@example.com'
+        password:
+          type: string
+          example: 'supersecret'
+        confirmPassword:
+          type: string
+          example: 'supersecret'
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          example: 'alice@example.com'
+        password:
+          type: string
+          example: 'supersecret'
+
+    RegisterConfig:
+      type: object
+      properties:
+        minNameLength:
+          type: number
+          example: 3
+        minPasswordLength:
+          type: number
+          example: 12
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
