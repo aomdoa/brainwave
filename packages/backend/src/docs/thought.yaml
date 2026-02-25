@@ -1,0 +1,289 @@
+openapi: 3.0.0
+info:
+  title: Brainwave Thoughts API
+  version: 1.0.0
+  description: |
+    The Thoughts API allows authenticated users to create, read, update, delete, 
+    and search their thoughts. All endpoints are secured with JWT authentication.
+
+tags:
+  - name: Thoughts
+    description: |
+      Operations related to user thoughts:
+      - Create new thoughts
+      - Get a single thought
+      - Update existing thoughts
+      - Delete thoughts
+      - Search and paginate through thoughts
+
+paths:
+  /thoughts:
+    post:
+      tags:
+        - Thoughts
+      summary: Create a new thought
+      description: Create a new thought for the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateThought'
+      responses:
+        '200':
+          description: The newly created thought
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Thought'
+        '401':
+          description: Unauthorized
+
+    get:
+      tags:
+        - Thoughts
+      summary: Search thoughts
+      description: |
+        Search and paginate through thoughts of the authenticated user.
+        Supports query parameters:
+        - `search` – optionally partial match against title and content return matches from both
+        - `filter` – optionally filter for the status, createdAt, updatedAt, lastFollowUp and nextReminder
+        - `orderBy` – any of the parameters - defaults to updatedAt:desc
+        - `page` and `size` – pagination maximum 100 per page
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: filter
+          in: query
+          schema:
+            type: string
+        - name: orderBy
+          in: query
+          schema:
+            type: string
+            default: 'updatedAt:desc'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 25
+      responses:
+        '200':
+          description: Paginated list of thoughts with metadata and links
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Thought'
+                  page:
+                    type: object
+                    properties:
+                      current:
+                        type: integer
+                      totalPages:
+                        type: integer
+                  links:
+                    type: object
+                    additionalProperties:
+                      type: string
+        '401':
+          description: Unauthorized
+
+  /thoughts/{id}:
+    get:
+      tags:
+        - Thoughts
+      summary: Get a single thought
+      description: Retrieve a single thought by ID for the authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Thought object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Thought'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Thought not found
+
+    patch:
+      tags:
+        - Thoughts
+      summary: Update a thought
+      description: Update an existing thought by ID for the authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateThought'
+      responses:
+        '200':
+          description: Updated thought object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Thought'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Thought not found
+
+    delete:
+      tags:
+        - Thoughts
+      summary: Delete a thought
+      description: Delete a thought by ID for the authenticated user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Thought deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '401':
+          description: Unauthorized
+        '404':
+          description: Thought not found
+
+components:
+  schemas:
+    Thought:
+      type: object
+      description: A user thought
+      properties:
+        thoughtId:
+          type: integer
+          example: 101
+          description: Unique ID of the thought
+        userId:
+          type: integer
+          example: 1
+          description: ID of the user who owns the thought
+        title:
+          type: string
+          example: 'Finish project'
+          description: Title of the thought
+        content:
+          type: string
+          example: 'Remember to finalize the report by Friday'
+          description: Body/content of the thought
+        status:
+          type: string
+          example: 'ACTIVE'
+          description: Status of the thought
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-02-24T19:28:48.494Z'
+          description: Date when the thought was created
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-02-24T19:28:48.494Z'
+          description: Date when the thought was last updated
+        lastFollowUp:
+          type: string
+          format: date-time
+          example: '2026-02-24T19:28:48.494Z'
+          description: The last time the thought was follow up
+          nullable: true
+        nextReminder:
+          type: string
+          format: date-time
+          example: '2026-02-24T19:28:48.494Z'
+          description: Optional date for next reminder
+          nullable: true
+    CreateThought:
+      type: object
+      description: Payload to create a new thought
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+          example: 'Finish project'
+          description: Title of the thought
+        content:
+          type: string
+          example: 'Remember to finalize the report by Friday'
+          description: Body/content of the thought
+        status:
+          type: string
+          example: 'ACTIVE'
+          description: Optional status
+        nextReminder:
+          type: string
+          format: date
+          example: '2026-03-01'
+          description: Optional next reminder date
+
+    UpdateThought:
+      type: object
+      description: Payload to update an existing thought
+      properties:
+        title:
+          type: string
+          example: 'Finish project'
+        content:
+          type: string
+          example: 'Remember to finalize the report by Friday'
+        status:
+          type: string
+          example: 'ACTIVE'
+        nextReminder:
+          type: string
+          format: date
+          example: '2026-03-01'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication; use the Authorize button in Swagger UI

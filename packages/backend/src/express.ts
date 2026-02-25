@@ -9,6 +9,7 @@ import { AppError } from './utils/error'
 import { registerAuthRoutes } from './routes/auth.route'
 import { registerHealthRoutes } from './routes/health.route'
 import { registerThoughtRoute } from './routes/thought.route'
+import { setupSwagger } from './utils/swagger'
 
 const serviceLog = logger.child({ file: 'express.ts' })
 
@@ -56,6 +57,8 @@ export function initialize(): Express {
   app.use('/thoughts', registerThoughtRoute())
   app.use('/health', registerHealthRoutes())
 
+  // Swagger
+  setupSwagger(app)
   // Capture the errors
   app.use(errorHandler)
 
