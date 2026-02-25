@@ -18,7 +18,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "export DATABASE_URL=file:$(pwd)/dev.db && prisma migrate --config prisma/prisma.config.mjs dev --preview-feature",
     "prisma:studio": "export DATABASE_URL=file:$(pwd)/dev.db && prisma studio --config prisma/prisma.config.mjs",
-    "build": "yarn clean && yarn test && yarn lint && yarn pretty && yarn spell && yarn prisma:generate && node _scripts/build.mjs && tsc",
+    "build": "yarn clean && yarn prisma:generate && yarn test && yarn lint && yarn pretty && yarn spell && node _scripts/build.mjs && tsc",
     "package": "node _scripts/package.mjs"
   },
   "devDependencies": {
@@ -38,6 +38,7 @@
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.3.0",
     "jest": "^30.2.0",
+    "jest-mock-extended": "^4.0.0",
     "nodemon": "^3.1.13",
     "prettier": "^3.8.1",
     "rimraf": "^6.1.2",

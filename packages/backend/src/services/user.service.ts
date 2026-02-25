@@ -67,10 +67,10 @@ export async function loginUser({ email, password }: { email: string; password: 
 }
 
 export async function getUser(userId: number): Promise<SafeUser> {
-  const user = (await prisma.user.findUnique({
+  const user: SafeUser | null = await prisma.user.findUnique({
     where: { userId },
-    select: { userId: true, email: true, name: true, createdAt: true },
-  })) as SafeUser
+    select: { userId: true, email: true, name: true, createdAt: true, updatedAt: true },
+  })
 
   if (!user) {
     throw new NotFoundError('User not found')

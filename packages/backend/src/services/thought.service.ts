@@ -16,7 +16,7 @@ export type CreateThought = {
   title: string
   body: string
   status: Status
-  nextReminder: string
+  nextReminder?: string
 }
 
 export type UpdateThought = {

@@ -1,17 +1,7 @@
 {
   "version": "0.2",
   "language": "en",
-  "words": [
-    "Shurgold"
-  ],
-  "ignore": [
-    "node_modules",
-    "dist",
-    "build",
-    ".git"
-  ],
-  "ignorePatterns": [
-    "package-lock.json",
-    "yarn.lock"
-  ]
+  "words": ["Shurgold", "apidevtools"],
+  "ignore": ["node_modules", "dist", "build", ".git"],
+  "ignorePatterns": ["package-lock.json", "yarn.lock"]
 }
