@@ -26,7 +26,7 @@ export function registerHealthRoutes(): Router {
   router.post('/error', authMiddleware, (req, res, next) => {
     try {
       logClientError(req.body)
-      res.json({ status: 'error recieved' })
+      res.json({ status: 'error received' })
     } catch (err) {
       next(err)
     }

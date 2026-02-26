@@ -2,7 +2,8 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { z } from 'zod'
-import { checkLive, checkReady } from '../../src/services/health.service'
+import { checkLive, checkReady, logClientError } from '../../src/services/health.service'
+import logger from '../../src/utils/logger'
 
 describe('health.service', () => {
   test('checkLive', () => {
@@ -26,5 +27,19 @@ describe('health.service', () => {
 
     const ready = checkReady()
     expect(() => statusSchema.parse(ready)).not.toThrow()
+  })
+
+  test('logClientError', () => {
+    jest.spyOn(logger, 'warn').mockImplementation(() => {})
+    const error = {
+      stack: 'stack',
+      message: 'message',
+      component: 'component',
+      info: 'info',
+    }
+    logClientError(error)
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Client Error: {\"stack\":\"stack\",\"message\":\"message\",\"component\":\"component\",\"info\":\"info\"}'
+    )
   })
 })

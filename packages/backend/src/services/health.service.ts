@@ -48,4 +48,4 @@ export function logClientError(errorInfo: ErrorInformation) {
   logger.warn(`Client Error: ${JSON.stringify(errorInfo)}`)
 }
 
-export default { checkLive, checkReady }
+export default { checkLive, checkReady, logClientError }
