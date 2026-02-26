@@ -61,7 +61,6 @@ const register = async () => {
     }
     return null
   })
-  console.dir(user)
 
   if (user) {
     router.push({ path: '/login', state: { userName: user.name } })
