@@ -2,8 +2,16 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 
-import { Status, Thought } from '@prisma/client'
-import { createThoughtSchema, createThoughtSearchSchema, FilterCondition, SearchPageResults } from '@brainwave/shared'
+import { Thought } from '@prisma/client'
+import {
+  thoughtServerCreateSchema,
+  thoughtSearchSchema,
+  FilterCondition,
+  SearchPageResults,
+  ThoughtServerCreate,
+  ThoughtServerUpdate,
+  thoughtServerUpdateSchema,
+} from '@brainwave/shared'
 import { config } from '../utils/config'
 import { NotFoundError, ValidationError } from '../utils/error'
 import { buildPrismaWhere, prisma } from '../utils/prisma'
@@ -11,33 +19,13 @@ import logger from '../utils/logger'
 
 const serviceLog = logger.child({ file: 'thought.service.ts' })
 
-export type CreateThought = {
-  userId: number
-  title: string
-  body: string
-  status: Status
-  nextReminder?: string
-}
-
-export type UpdateThought = {
-  thoughtId: number
-  userId: number
-  title?: string
-  body?: string
-  status?: Status
-  nextReminder?: string
-}
-
-export function getSchema() {
-  return createThoughtSchema({
+export async function createThought(data: ThoughtServerCreate): Promise<Thought> {
+  const schema = thoughtServerCreateSchema({
     minTitleLength: config.THOUGHT_TITLE_MIN_LENGTH,
     maxTitleLength: config.THOUGHT_TITLE_MAX_LENGTH,
     minBodyLength: config.THOUGHT_BODY_MIN_LENGTH,
     maxBodyLength: config.THOUGHT_BODY_MAX_LENGTH,
   })
-}
-export async function createThought(data: CreateThought): Promise<Thought> {
-  const schema = getSchema()
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
@@ -56,13 +44,18 @@ export async function createThought(data: CreateThought): Promise<Thought> {
   return thought
 }
 
-export async function updateThought(data: UpdateThought): Promise<Thought> {
-  const schema = getSchema().partial()
+export async function updateThought(data: ThoughtServerUpdate): Promise<Thought> {
+  const schema = thoughtServerUpdateSchema({
+    minTitleLength: config.THOUGHT_TITLE_MIN_LENGTH,
+    maxTitleLength: config.THOUGHT_TITLE_MAX_LENGTH,
+    minBodyLength: config.THOUGHT_BODY_MIN_LENGTH,
+    maxBodyLength: config.THOUGHT_BODY_MAX_LENGTH,
+  })
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
   }
-  const { thoughtId, userId, ...updateData } = data
+  const { thoughtId, userId, ...updateData } = parsed.data
   const thought = await prisma.thought.update({ where: { thoughtId, userId }, data: updateData })
   serviceLog.debug(`updatedThought: ${JSON.stringify(thought)}`)
   return thought
@@ -90,7 +83,7 @@ export async function searchThoughts(
   rawSearch: unknown,
   userId: number
 ): Promise<{ data: Thought[]; page: SearchPageResults }> {
-  const schema = createThoughtSearchSchema({
+  const schema = thoughtSearchSchema({
     pageSizeMaximum: config.PAGE_SIZE_MAXIMUM,
     pageSizeDefault: config.PAGE_SIZE_DEFAULT,
   })

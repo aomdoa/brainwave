@@ -12,6 +12,7 @@
     "package": "node _scripts/package.mjs"
   },
   "dependencies": {
+    "@brainwave/shared": "1.0.0",
     "axios": "^1.13.5",
     "vue": "^3.5.25",
     "zod": "^4.3.6"

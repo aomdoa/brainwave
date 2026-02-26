@@ -8,34 +8,43 @@ export const VALID_SEARCH_LOGICALS = ['and', 'or'] as const
 
 export type SearchOperators = (typeof VALID_SEARCH_OPERATORS)[number]
 export type SearchLogicals = (typeof VALID_SEARCH_LOGICALS)[number]
-
 export type FilterCondition = {
   field: string
   operator: SearchOperators
   value: string
   logical: SearchLogicals
 }
-
-export interface SearchRequest {
-  page: number | undefined
-  size: number | undefined
-  orderBy: string | undefined
-  search: string | undefined
-  filter: string | undefined
-}
-
-export interface SearchPageResults {
-  current: number
-  size: number
-  totalElements: number
-  totalPages: number
-}
-
 export interface SearchResultConfig {
   pageSizeMaximum: number
   pageSizeDefault: number
 }
 
+// search results
+export const searchPageSchema = () =>
+  z
+    .object({
+      current: z.number().int().positive(),
+      size: z.number().int().positive(),
+      totalElements: z.number().int().nonnegative(),
+      totalPages: z.number().int().nonnegative(),
+    })
+    .strict()
+
+export const searchLinksSchema = () =>
+  z
+    .object({
+      self: z.url(),
+      first: z.url(),
+      last: z.url(),
+      next: z.url().nullable(),
+      prev: z.url().nullable(),
+    })
+    .strict()
+
+export type SearchPage = z.infer<ReturnType<typeof searchPageSchema>>
+export type SearchLinks = z.infer<ReturnType<typeof searchLinksSchema>>
+
+// search request
 export const searchSchema = (
   config: SearchResultConfig,
   filters: string[],

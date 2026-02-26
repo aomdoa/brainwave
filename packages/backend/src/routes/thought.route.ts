@@ -3,25 +3,26 @@
  */
 import { Router } from 'express'
 import { authMiddleware, AuthRequest, buildPageLink } from '../utils/express'
+import { createThought, deleteThought, getThought, searchThoughts, updateThought } from '../services/thought.service'
 import {
-  createThought,
-  deleteThought,
-  getThought,
-  searchThoughts,
-  updateThought,
-  UpdateThought,
-  type CreateThought,
-} from '../services/thought.service'
+  ThoughtClient,
+  thoughtClientSchema,
+  ThoughtServer,
+  ThoughtServerCreate,
+  ThoughtServerUpdate,
+} from '@brainwave/shared'
 
 export function registerThoughtRoute(): Router {
   const router = Router()
+
+  const toPublic = (thought: ThoughtServer): ThoughtClient => thoughtClientSchema().parse(thought)
 
   router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
       const thoughtData = {
         userId: req.userId,
         ...req.body,
-      } as CreateThought
+      } as ThoughtServerCreate
       const thought = await createThought(thoughtData)
       return res.json(thought)
     } catch (err) {
@@ -33,7 +34,7 @@ export function registerThoughtRoute(): Router {
     try {
       const thoughtId = Number(req.params.id)
       const thought = await getThought(thoughtId, req.userId ?? 0)
-      return res.json(thought)
+      return res.json(toPublic(thought))
     } catch (err) {
       return next(err)
     }
@@ -46,10 +47,10 @@ export function registerThoughtRoute(): Router {
         thoughtId,
         userId: req.userId,
         ...req.body,
-      } as UpdateThought
+      } as ThoughtServerUpdate
 
       const thought = await updateThought(thoughtData)
-      return res.json(thought)
+      return res.json(toPublic(thought))
     } catch (err) {
       return next(err)
     }
@@ -59,7 +60,7 @@ export function registerThoughtRoute(): Router {
     try {
       const thoughtId = Number(req.params.id)
       const thought = await deleteThought(thoughtId, req.userId ?? 0)
-      return res.json(thought)
+      return res.json(toPublic(thought))
     } catch (err) {
       return next(err)
     }
@@ -82,7 +83,7 @@ export function registerThoughtRoute(): Router {
         next: page.current < page.totalPages ? buildPageLink(req, page.current + 1) : undefined,
       }
 
-      return res.json({ data, page, links })
+      return res.json({ data: data.map(toPublic), page, links })
     } catch (err) {
       return next(err)
     }
