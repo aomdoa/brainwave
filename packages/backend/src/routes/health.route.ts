@@ -2,7 +2,8 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { Router } from 'express'
-import { checkLive, checkReady } from '../services/health.service'
+import { checkLive, checkReady, logClientError } from '../services/health.service'
+import { authMiddleware } from '../utils/express'
 
 export function registerHealthRoutes(): Router {
   const router = Router()
@@ -21,5 +22,15 @@ export function registerHealthRoutes(): Router {
       next(err)
     }
   })
+
+  router.post('/error', authMiddleware, (req, res, next) => {
+    try {
+      logClientError(req.body)
+      res.json({ status: 'error received' })
+    } catch (err) {
+      next(err)
+    }
+  })
+
   return router
 }

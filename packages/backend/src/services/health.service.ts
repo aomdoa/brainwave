@@ -2,6 +2,7 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { buildInfo } from '../build-info'
+import logger from '../utils/logger'
 
 export type LiveStatus = {
   status: string
@@ -17,6 +18,13 @@ export type ReadyStatus = LiveStatus & {
     database: boolean
   }
   uptime: number
+}
+
+export type ErrorInformation = {
+  message: string
+  stack: string
+  component: string
+  info: string
 }
 
 export function checkLive(): LiveStatus {
@@ -36,4 +44,8 @@ export function checkReady(): ReadyStatus {
   }
 }
 
-export default { checkLive, checkReady }
+export function logClientError(errorInfo: ErrorInformation) {
+  logger.warn(`Client Error: ${JSON.stringify(errorInfo)}`)
+}
+
+export default { checkLive, checkReady, logClientError }

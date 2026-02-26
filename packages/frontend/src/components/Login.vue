@@ -15,7 +15,6 @@ onMounted(() => {
   welcomeName.value = (router.options.history.state?.userName as string) ?? ''
 })
 const login = async () => {
-  window.alert(`Logging in with ${email.value} and ${password.value}`)
   await apiLogin(email.value, password.value).catch((err) => {
     window.alert(`Login failed: ${err.message}`)
   })

@@ -67,4 +67,21 @@ export async function registerUser(registration: RegisterInput): Promise<User> {
   return response.data as User
 }
 
+// Report error
+export async function reportError(err: Error, instance: any, info: String) {
+  const error = {
+    message: err.message,
+    stack: err.stack,
+    component: instance?.$options.name,
+    info,
+  }
+  try {
+    await api.post('/health/error', error)
+  } catch (err) {
+    // likely service is down
+    const error = err as Error
+    console.error(error.message)
+  }
+}
+
 export default api
