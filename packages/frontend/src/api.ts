@@ -11,6 +11,7 @@ import type {
   SearchLinks,
   SearchPage,
   ThoughtClient,
+  ThoughtConfig,
   ThoughtSearchResults,
 } from '@brainwave/shared'
 
@@ -122,6 +123,19 @@ export async function getThoughts(
     page: response.data.page,
     links: response.data.links,
   }
+}
+
+export async function getThoughtById(thoughtId: number): Promise<ThoughtClient> {
+  const response = await api.get<ThoughtClient>(`thoughts/${thoughtId}`)
+  if (response.statusText !== 'OK') {
+    throw new Error(`Failed to retrieve thought ${thoughtId}: ${response.statusText}`)
+  }
+  return response.data
+}
+
+export async function getThoughtConfig(): Promise<ThoughtConfig> {
+  const response = await api.get('/thoughts/config')
+  return response.data as ThoughtConfig
 }
 
 // Report error

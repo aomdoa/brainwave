@@ -7,6 +7,8 @@ import { authMiddleware } from '../utils/express'
 
 export function registerHealthRoutes(): Router {
   const router = Router()
+
+  // public
   router.get('/live', (_req, res, next) => {
     try {
       res.json(checkLive())
@@ -23,6 +25,7 @@ export function registerHealthRoutes(): Router {
     }
   })
 
+  // private
   router.post('/error', authMiddleware, (req, res, next) => {
     try {
       logClientError(req.body)

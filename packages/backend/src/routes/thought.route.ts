@@ -7,16 +7,30 @@ import { createThought, deleteThought, getThought, searchThoughts, updateThought
 import {
   ThoughtClient,
   thoughtClientSchema,
+  ThoughtConfig,
   ThoughtServer,
   ThoughtServerCreate,
   ThoughtServerUpdate,
 } from '@brainwave/shared'
+import config from '../utils/config'
 
 export function registerThoughtRoute(): Router {
   const router = Router()
 
   const toPublic = (thought: ThoughtServer): ThoughtClient => thoughtClientSchema.parse(thought)
 
+  // public
+  router.get('/config', (_req, res) => {
+    const thoughtConfig = {
+      minTitleLength: config.THOUGHT_TITLE_MIN_LENGTH,
+      maxTitleLength: config.THOUGHT_TITLE_MAX_LENGTH,
+      minBodyLength: config.THOUGHT_BODY_MIN_LENGTH,
+      maxBodyLength: config.THOUGHT_BODY_MAX_LENGTH,
+    } as ThoughtConfig
+    return res.json(thoughtConfig)
+  })
+
+  // private
   router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
       const thoughtData = {
@@ -88,5 +102,6 @@ export function registerThoughtRoute(): Router {
       return next(err)
     }
   })
+
   return router
 }

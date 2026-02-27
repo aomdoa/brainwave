@@ -61,11 +61,7 @@ const goToThought = (id: number) => {
 }
 
 const fetchThoughts = async () => {
-  const {
-    thoughts: fetchedThoughts,
-    page,
-    links,
-  } = await getThoughts({
+  const { thoughts: fetchedThoughts, page } = await getThoughts({
     orderBy: {
       field: pagination.orderBy,
       direction: pagination.orderDesc ? 'desc' : 'asc',

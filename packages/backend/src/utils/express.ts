@@ -11,6 +11,7 @@ export interface AuthRequest extends express.Request {
 }
 
 export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
+  console.log('AUTH')
   const header = req.headers.authorization
   if (!header) {
     throw new ValidationError('Missing token')

@@ -20,10 +20,7 @@ const errors = ref<Record<string, string>>({})
 onMounted(async () => {
   try {
     const config = await getAuthConfig()
-    schema.value = createRegisterSchema({
-      minNameLength: Number(config.minNameLength),
-      minPasswordLength: Number(config.minPasswordLength),
-    })
+    schema.value = createRegisterSchema(config)
   } finally {
     status.value = 'loaded'
   }
