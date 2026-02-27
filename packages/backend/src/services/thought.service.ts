@@ -5,12 +5,12 @@
 import { Thought } from '@prisma/client'
 import {
   thoughtServerCreateSchema,
-  thoughtSearchSchema,
-  FilterCondition,
-  SearchPageResults,
   ThoughtServerCreate,
   ThoughtServerUpdate,
   thoughtServerUpdateSchema,
+  thoughtSearchParamsSchema,
+  SearchPage,
+  SearchFilter,
 } from '@brainwave/shared'
 import { config } from '../utils/config'
 import { NotFoundError, ValidationError } from '../utils/error'
@@ -82,29 +82,33 @@ export async function deleteThought(thoughtId: number, userId: number): Promise<
 export async function searchThoughts(
   rawSearch: unknown,
   userId: number
-): Promise<{ data: Thought[]; page: SearchPageResults }> {
-  const schema = thoughtSearchSchema({
+): Promise<{ data: Thought[]; page: SearchPage }> {
+  const schema = thoughtSearchParamsSchema({
     pageSizeMaximum: config.PAGE_SIZE_MAXIMUM,
     pageSizeDefault: config.PAGE_SIZE_DEFAULT,
   })
+
   const parsed = schema.safeParse(rawSearch)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
   }
 
-  const search = buildPrismaWhere(parsed.data.filter as FilterCondition[], ['title', 'body'], parsed.data.search)
+  const search = buildPrismaWhere(parsed.data.filter as SearchFilter[], ['title', 'body'], parsed.data.search)
   const where = { userId, ...search }
-
+  const params = {
+    where,
+    orderBy: { [parsed.data.orderBy.field]: parsed.data.orderBy.direction },
+    skip: (parsed.data.page - 1) * parsed.data.size,
+    take: parsed.data.size,
+  }
   const [thoughts, count] = await prisma.$transaction([
-    prisma.thought.findMany({
-      where,
-      orderBy: { [parsed.data.orderBy.field]: parsed.data.orderBy.direction },
-      skip: (parsed.data.page - 1) * parsed.data.size,
-      take: parsed.data.size,
-    }),
+    prisma.thought.findMany(params),
     prisma.thought.count({ where }),
   ])
 
+  serviceLog.debug(
+    `searchThoughts ${JSON.stringify(params)} with results ${JSON.stringify(thoughts)} and total length ${count}`
+  )
   return {
     data: thoughts,
     page: {

@@ -15,7 +15,7 @@ import {
 export function registerThoughtRoute(): Router {
   const router = Router()
 
-  const toPublic = (thought: ThoughtServer): ThoughtClient => thoughtClientSchema().parse(thought)
+  const toPublic = (thought: ThoughtServer): ThoughtClient => thoughtClientSchema.parse(thought)
 
   router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
     try {

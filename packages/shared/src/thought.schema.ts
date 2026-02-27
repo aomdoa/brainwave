@@ -17,28 +17,26 @@ export const THOUGHT_SEARCH_FILTERS = ['status', 'createdAt', 'updatedAt', 'last
 export const THOUGHT_SEARCH_ORDERS = ['title', ...THOUGHT_SEARCH_FILTERS]
 
 // core thoughts
-export const thoughtBaseSchema = () =>
-  z.object({
-    thoughtId: z.number().positive(),
-    title: z.string(),
-    body: z.string(),
-    status: z.enum(status),
-    nextReminder: z.date().nullable(),
-    createdAt: z.date(),
-    updatedAt: z.date(),
-    lastFollowUp: z.date().nullable(),
+export const thoughtBaseSchema = z.object({
+  thoughtId: z.number().positive(),
+  title: z.string(),
+  body: z.string(),
+  status: z.enum(status),
+  nextReminder: z.date().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  lastFollowUp: z.date().nullable(),
+})
+
+export const thoughtServerSchema = thoughtBaseSchema
+  .extend({
+    userId: z.number().positive(),
   })
+  .strict()
 
-export const thoughtServerSchema = () =>
-  thoughtBaseSchema()
-    .extend({
-      userId: z.number().positive(),
-    })
-    .strict()
-
-export const thoughtClientSchema = () => thoughtBaseSchema().strip()
-export type ThoughtServer = z.infer<ReturnType<typeof thoughtServerSchema>>
-export type ThoughtClient = z.infer<ReturnType<typeof thoughtClientSchema>>
+export const thoughtClientSchema = thoughtBaseSchema.strip()
+export type ThoughtServer = z.infer<typeof thoughtServerSchema>
+export type ThoughtClient = z.infer<typeof thoughtClientSchema>
 
 // creation of thoughts
 export const thoughtBaseCreateSchema = (config: ThoughtConfig) =>
@@ -74,15 +72,15 @@ export type ThoughtServerUpdate = z.infer<ReturnType<typeof thoughtServerUpdateS
 export type ThoughtClientUpdate = z.infer<ReturnType<typeof thoughtClientUpdateSchema>>
 
 // searching thoughts
-export const thoughtSearchResultsSchema = () =>
-  z
-    .object({
-      items: thoughtServerSchema().array(),
-      page: searchPageSchema,
-      links: searchLinksSchema,
-    })
-    .strict()
+export const thoughtSearchResultsSchema = z
+  .object({
+    data: thoughtServerSchema.array(),
+    page: searchPageSchema,
+    links: searchLinksSchema,
+  })
+  .strict()
 export const thoughtSearchParamsSchema = (config: SearchResultConfig) =>
   searchSchema(config, THOUGHT_SEARCH_FILTERS, THOUGHT_SEARCH_ORDERS)
 
-export type ThoughtSearchParams = z.infer<ReturnType<typeof thoughtSearchParamsSchema>>
+export type ThoughtSearchResults = z.infer<typeof thoughtSearchResultsSchema>
+export type ThoughtSearchParams = z.infer<typeof thoughtSearchParamsSchema>

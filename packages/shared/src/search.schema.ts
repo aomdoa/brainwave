@@ -8,43 +8,60 @@ export const VALID_SEARCH_LOGICALS = ['and', 'or'] as const
 
 export type SearchOperators = (typeof VALID_SEARCH_OPERATORS)[number]
 export type SearchLogicals = (typeof VALID_SEARCH_LOGICALS)[number]
-export type FilterCondition = {
-  field: string
-  operator: SearchOperators
-  value: string
-  logical: SearchLogicals
-}
+
 export interface SearchResultConfig {
   pageSizeMaximum: number
   pageSizeDefault: number
 }
 
 // search results
-export const searchPageSchema = () =>
-  z
-    .object({
-      current: z.number().int().positive(),
-      size: z.number().int().positive(),
-      totalElements: z.number().int().nonnegative(),
-      totalPages: z.number().int().nonnegative(),
-    })
-    .strict()
+export const searchPageSchema = z
+  .object({
+    current: z.number().int().positive(),
+    size: z.number().int().positive(),
+    totalElements: z.number().int().nonnegative(),
+    totalPages: z.number().int().nonnegative(),
+  })
+  .strict()
 
-export const searchLinksSchema = () =>
-  z
-    .object({
-      self: z.url(),
-      first: z.url(),
-      last: z.url(),
-      next: z.url().nullable(),
-      prev: z.url().nullable(),
-    })
-    .strict()
+export const searchLinksSchema = z
+  .object({
+    self: z.url(),
+    first: z.url(),
+    last: z.url(),
+    next: z.url().nullable(),
+    prev: z.url().nullable(),
+  })
+  .strict()
 
-export type SearchPage = z.infer<ReturnType<typeof searchPageSchema>>
-export type SearchLinks = z.infer<ReturnType<typeof searchLinksSchema>>
+export type SearchPage = z.infer<typeof searchPageSchema>
+export type SearchLinks = z.infer<typeof searchLinksSchema>
 
-// search request
+// Simple search schema that can be used by the ui
+export const searchOrderSchema = z.object({
+  field: z.string(),
+  direction: z.enum(['asc', 'desc']),
+})
+
+export const searchFilterSchema = z.object({
+  field: z.string(),
+  operator: z.enum(VALID_SEARCH_OPERATORS),
+  value: z.string(),
+  logical: z.enum(VALID_SEARCH_LOGICALS),
+})
+
+export const searchClientSchema = z.object({
+  page: z.number().optional(),
+  size: z.number().optional(),
+  orderBy: searchOrderSchema.optional(),
+  search: z.string().optional(),
+  filter: z.array(searchFilterSchema).optional(),
+})
+export type SearchOrder = z.infer<typeof searchOrderSchema>
+export type SearchFilter = z.infer<typeof searchFilterSchema>
+export type SearchClientSchema = z.infer<typeof searchClientSchema>
+
+// search request only the backend should use this - includes parsing of the data
 export const searchSchema = (
   config: SearchResultConfig,
   filters: string[],
@@ -115,7 +132,7 @@ export const filterSchema = (filters: string[]) =>
       try {
         const regex = new RegExp(`\\s+\\b(${VALID_SEARCH_LOGICALS.join('|')})\\b\\s+`, 'i')
         const tokens = value.split(regex)
-        const conditions: FilterCondition[] = []
+        const conditions: SearchFilter[] = []
         let logical = 'and'
 
         for (let i = 0; i < tokens.length; i++) {

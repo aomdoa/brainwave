@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client'
 import { config } from './config'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import logger from './logger'
-import { FilterCondition } from '@brainwave/shared'
+import { SearchFilter } from '@brainwave/shared'
 
 const serviceLog = logger.child({ file: 'utils/prisma.ts' })
 
@@ -35,28 +35,28 @@ export const prismaOperatorMap: Record<string, string> = {
 }
 
 export function buildPrismaWhere(
-  filters: FilterCondition[],
+  filters: SearchFilter[],
   columns: string[] = [],
   search: string | undefined = undefined
 ): PrismaWhere {
-  if (!filters?.length) return {}
-
   let andStack: any[] = []
   let orStack: any[] = []
 
-  for (const cond of filters) {
-    const prismaOp = prismaOperatorMap[cond.operator]
-    if (!prismaOp) continue
+  if (filters?.length > 0) {
+    for (const cond of filters) {
+      const prismaOp = prismaOperatorMap[cond.operator]
+      if (!prismaOp) continue
 
-    let value: string | number | Date = cond.value
-    if (!isNaN(Number(cond.value))) value = Number(cond.value)
-    if (/\d{4}-\d{2}-\d{2}/.test(cond.value)) value = new Date(cond.value)
+      let value: string | number | Date = cond.value
+      if (!isNaN(Number(cond.value))) value = Number(cond.value)
+      if (/\d{4}-\d{2}-\d{2}/.test(cond.value)) value = new Date(cond.value)
 
-    const filterObj = { [cond.field]: { [prismaOp]: value } }
-    if (cond.logical === 'or') {
-      orStack.push(filterObj)
-    } else {
-      andStack.push(filterObj)
+      const filterObj = { [cond.field]: { [prismaOp]: value } }
+      if (cond.logical === 'or') {
+        orStack.push(filterObj)
+      } else {
+        andStack.push(filterObj)
+      }
     }
   }
 

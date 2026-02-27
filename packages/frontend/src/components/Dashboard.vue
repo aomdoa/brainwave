@@ -2,43 +2,86 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { ref, onMounted, reactive } from 'vue'
-import { me } from '../api'
+import { ref, onMounted, reactive, watch } from 'vue'
+import { refDebounced } from '@vueuse/core'
 import { type ThoughtClient } from '@brainwave/shared'
+import { getThoughts, me } from '../api'
 import { router } from '../router'
 
+const pageSize = 2
 const user = ref<{ id: number; email: string; name?: string } | null>(null)
 const search = ref('')
 const thoughts = ref<ThoughtClient[]>([])
 const pagination = reactive({
-  page: 1,
-  size: 25,
-  orderBy: 'lastUpdated',
+  currentPage: 1,
+  currentPageSize: 0,
+  orderBy: 'updatedAt',
   orderDesc: true,
 })
 const totalPages = ref(0)
 
+const debouncedSearch = refDebounced(search, 400)
+watch(debouncedSearch, () => {
+  onSearch()
+})
+
 const onSearch = () => {
-  console.log('search')
+  fetchThoughts()
 }
 
 const nextPage = () => {
-  console.log('next page')
+  const newPage = pagination.currentPage + 1
+  if (newPage <= totalPages.value) {
+    pagination.currentPage = newPage
+    fetchThoughts()
+  }
 }
 
 const prevPage = () => {
-  console.log('prev page')
+  const newPage = pagination.currentPage - 1
+  if (newPage > 0) {
+    pagination.currentPage = newPage
+    fetchThoughts()
+  }
 }
 
 const sortBy = (name: string) => {
-  console.log(`sortby ${name}`)
+  pagination.currentPage = 1
+  if (pagination.orderBy === name) {
+    pagination.orderDesc = !pagination.orderDesc
+  } else {
+    pagination.orderBy = name
+    pagination.orderDesc = true
+  }
+  fetchThoughts()
 }
 
 const goToThought = (id: number) => {
   router.push(`/thoughts/${id}`)
 }
 
+const fetchThoughts = async () => {
+  const {
+    thoughts: fetchedThoughts,
+    page,
+    links,
+  } = await getThoughts({
+    orderBy: {
+      field: pagination.orderBy,
+      direction: pagination.orderDesc ? 'desc' : 'asc',
+    },
+    search: search.value.length > 0 ? search.value : undefined,
+    page: pagination.currentPage,
+    size: pageSize,
+  })
+  pagination.currentPage = page.current
+  pagination.currentPageSize = page.size
+  totalPages.value = page.totalPages
+  thoughts.value = fetchedThoughts
+}
+
 onMounted(async () => {
+  await fetchThoughts()
   user.value = await me()
 })
 </script>
@@ -47,7 +90,7 @@ onMounted(async () => {
   <div v-if="user">
     <h1>Welcome, {{ user.name || user.email }}!</h1>
     <div class="controls">
-      <input type="text" v-model="search" @input="onSearch" placeholder="Search thoughts..." />
+      <input type="text" v-model="search" @keyup.enter="onSearch()" placeholder="Search thoughts..." />
     </div>
 
     <table class="thoughts-table">
@@ -88,9 +131,9 @@ onMounted(async () => {
     </table>
 
     <div class="pagination">
-      <button :disabled="pagination.page === 1" @click="prevPage">Prev</button>
-      <span>Page {{ pagination.page }} of {{ totalPages }}</span>
-      <button :disabled="pagination.page === totalPages" @click="nextPage">Next</button>
+      <button :disabled="pagination.currentPage === 1" @click="prevPage">Prev</button>
+      <span>Page {{ pagination.currentPage }} of {{ totalPages }}</span>
+      <button :disabled="pagination.currentPage === totalPages" @click="nextPage">Next</button>
     </div>
   </div>
   <div v-else>Loading...</div>

@@ -4,7 +4,15 @@
 import axios from 'axios'
 import config from './utils/config'
 import { router } from './router'
-import type { RegisterConfig, RegisterInput } from '@brainwave/shared'
+import type {
+  RegisterConfig,
+  RegisterInput,
+  SearchClientSchema,
+  SearchLinks,
+  SearchPage,
+  ThoughtClient,
+  ThoughtSearchResults,
+} from '@brainwave/shared'
 
 export interface User {
   id: number
@@ -34,6 +42,39 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// Build the search
+export function buildSearchQuery(params: SearchClientSchema): string {
+  const query = new URLSearchParams()
+
+  if (params.page !== undefined) {
+    query.set('page', String(params.page))
+  }
+
+  if (params.size !== undefined) {
+    query.set('size', String(params.size))
+  }
+
+  if (params.orderBy) {
+    query.set('orderBy', `${params.orderBy.field}:${params.orderBy.direction ?? 'desc'}`)
+  }
+
+  if (params.search) {
+    query.set('search', params.search)
+  }
+
+  if (params.filter && params.filter?.length > 0) {
+    const filter = params.filter
+    query.set(
+      'filter',
+      filter
+        .map((f, i) => `${f.field} ${f.operator} ${f.value}${i < filter.length - 1 ? ` ${f.operator ?? 'and'} ` : ''}`)
+        .join('')
+    )
+  }
+
+  return query.toString()
+}
 
 // Perform the login request, store the token, and return the user info
 export async function login(email: string, password: string): Promise<User> {
@@ -67,6 +108,22 @@ export async function registerUser(registration: RegisterInput): Promise<User> {
   return response.data as User
 }
 
+// Fetch our thoughts
+export async function getThoughts(
+  searchParams: SearchClientSchema
+): Promise<{ thoughts: ThoughtClient[]; page: SearchPage; links: SearchLinks }> {
+  const query = buildSearchQuery(searchParams)
+  const response = await api.get<ThoughtSearchResults>(`/thoughts?${query}`)
+  if (response.statusText !== 'OK') {
+    throw new Error(`Failed to retrieve thoughts with '${query}': ${response.statusText}`)
+  }
+  return {
+    thoughts: response.data.data,
+    page: response.data.page,
+    links: response.data.links,
+  }
+}
+
 // Report error
 export async function reportError(err: Error, instance: any, info: String) {
   const error = {
@@ -83,5 +140,3 @@ export async function reportError(err: Error, instance: any, info: String) {
     console.error(error.message)
   }
 }
-
-export default api
