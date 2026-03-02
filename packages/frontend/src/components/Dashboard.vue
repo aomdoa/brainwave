@@ -7,16 +7,17 @@ import { refDebounced } from '@vueuse/core'
 import { type ThoughtClient } from '@brainwave/shared'
 import { getThoughts, me } from '../api'
 import { router } from '../router'
+import dayjs from 'dayjs'
 
-const pageSize = 2
+const pageSize = 20
 const user = ref<{ id: number; email: string; name?: string } | null>(null)
 const search = ref('')
 const thoughts = ref<ThoughtClient[]>([])
 const pagination = reactive({
   currentPage: 1,
   currentPageSize: 0,
-  orderBy: 'updatedAt',
-  orderDesc: true,
+  orderBy: 'lastFollowUp',
+  orderDesc: false,
 })
 const totalPages = ref(0)
 
@@ -56,6 +57,10 @@ const sortBy = (name: string) => {
   fetchThoughts()
 }
 
+const create = () => {
+  router.push('/thoughts/')
+}
+
 const goToThought = (id: number) => {
   router.push(`/thoughts/${id}`)
 }
@@ -87,6 +92,7 @@ onMounted(async () => {
     <h1>Welcome, {{ user.name || user.email }}!</h1>
     <div class="controls">
       <input type="text" v-model="search" @keyup.enter="onSearch()" placeholder="Search thoughts..." />
+      <button @click="create">Add Thought</button>
     </div>
 
     <table class="thoughts-table">
@@ -104,9 +110,9 @@ onMounted(async () => {
               {{ pagination.orderDesc ? '▼' : '▲' }}
             </span>
           </th>
-          <th @click="sortBy('nextReminder')">
-            Next Reminder
-            <span v-if="pagination.orderBy === 'nextReminder'">
+          <th @click="sortBy('lastFollowUp')">
+            Last Checked
+            <span v-if="pagination.orderBy === 'lastFollowUp'">
               {{ pagination.orderDesc ? '▼' : '▲' }}
             </span>
           </th>
@@ -120,8 +126,10 @@ onMounted(async () => {
           class="clickable-row"
         >
           <td>{{ thought.title }}</td>
-          <td>{{ thought.updatedAt }}</td>
-          <td>{{ thought.nextReminder }}</td>
+          <td style="width: 16ch">{{ dayjs(thought.updatedAt).format('YYYY-MM-DD HH:mm') }}</td>
+          <td style="width: 16ch">
+            {{ thought.lastFollowUp ? dayjs(thought.lastFollowUp).format('YYYY-MM-DD HH:mm') : 'Never' }}
+          </td>
         </tr>
       </tbody>
     </table>
@@ -156,7 +164,14 @@ onMounted(async () => {
   background-color: #f0f0f0;
 }
 .controls {
+  display: flex;
   margin-bottom: 1rem;
+}
+.controls input {
+  width: 20rem;
+}
+.controls button {
+  margin-left: auto;
 }
 .pagination {
   margin-top: 1rem;

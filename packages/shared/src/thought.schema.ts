@@ -12,7 +12,7 @@ export interface ThoughtConfig {
 }
 
 const status = ['ACTIVE', 'INACTIVE', 'CLOSED'] as const
-export type Status = (typeof status)[number]
+export type ThoughtStatus = (typeof status)[number]
 export const THOUGHT_SEARCH_FILTERS = ['status', 'createdAt', 'updatedAt', 'lastFollowUp', 'nextReminder']
 export const THOUGHT_SEARCH_ORDERS = ['title', ...THOUGHT_SEARCH_FILTERS]
 
@@ -22,10 +22,10 @@ export const thoughtBaseSchema = z.object({
   title: z.string(),
   body: z.string(),
   status: z.enum(status),
-  nextReminder: z.date().nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  lastFollowUp: z.date().nullable(),
+  nextReminder: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+  lastFollowUp: z.iso.datetime().nullable(),
 })
 
 export const thoughtServerSchema = thoughtBaseSchema
@@ -54,7 +54,7 @@ export const thoughtServerCreateSchema = (config: ThoughtConfig) =>
 
 export const thoughtClientCreateSchema = thoughtBaseCreateSchema
 export type ThoughtServerCreate = z.infer<ReturnType<typeof thoughtServerCreateSchema>>
-export type ThoughtClientCreate = z.infer<ReturnType<typeof thoughtServerCreateSchema>>
+export type ThoughtClientCreate = z.infer<ReturnType<typeof thoughtClientCreateSchema>>
 
 // update of the thoughts
 export const thoughtBaseUpdateSchema = (config: ThoughtConfig) =>

@@ -92,7 +92,7 @@ describe('thought.service', () => {
 
       expect(mockPrisma.thought.update).toHaveBeenCalledWith({
         where: { thoughtId: input.thoughtId, userId: input.userId },
-        data: { title: 'Updated' },
+        data: expect.objectContaining({ title: 'Updated' }),
       })
 
       expect(result).toEqual(updated)

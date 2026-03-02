@@ -1,7 +1,7 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import axios from 'axios'
+import axios, { type AxiosResponse } from 'axios'
 import config from './utils/config'
 import { router } from './router'
 import type {
@@ -11,6 +11,8 @@ import type {
   SearchLinks,
   SearchPage,
   ThoughtClient,
+  ThoughtClientCreate,
+  ThoughtClientUpdate,
   ThoughtConfig,
   ThoughtSearchResults,
 } from '@brainwave/shared'
@@ -36,9 +38,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status
-    if (status === 401 || status === 403) {
+    if (status === 401 || status === 403 || status === 404) {
       localStorage.removeItem('token')
-      router.push('/login')
+      return router.push('/login')
     }
     return Promise.reject(error)
   }
@@ -129,6 +131,28 @@ export async function getThoughtById(thoughtId: number): Promise<ThoughtClient> 
   const response = await api.get<ThoughtClient>(`thoughts/${thoughtId}`)
   if (response.statusText !== 'OK') {
     throw new Error(`Failed to retrieve thought ${thoughtId}: ${response.statusText}`)
+  }
+  return response.data
+}
+
+export async function saveThought(thought: ThoughtClientCreate | ThoughtClientUpdate): Promise<ThoughtClient> {
+  let response: AxiosResponse<ThoughtClient>
+  const updateThought = thought as ThoughtClientUpdate
+  if (updateThought.thoughtId != null) {
+    response = await api.patch<ThoughtClient>(`thoughts/${updateThought.thoughtId}`, updateThought)
+  } else {
+    response = await api.post<ThoughtClient>('thoughts/', thought as ThoughtClientCreate)
+  }
+  if (response.statusText !== 'OK') {
+    throw new Error(`Failed saving thought: ${response.statusText}`)
+  }
+  return response.data
+}
+
+export async function deleteThought(thoughtId: number): Promise<ThoughtClient> {
+  const response = await api.delete<ThoughtClient>(`thoughts/${thoughtId}`)
+  if (response.statusText !== 'OK') {
+    throw new Error(`Failed to remove thought ${thoughtId}: ${response.statusText}`)
   }
   return response.data
 }

@@ -47,9 +47,8 @@ export function buildPrismaWhere(
       const prismaOp = prismaOperatorMap[cond.operator]
       if (!prismaOp) continue
 
-      let value: string | number | Date = cond.value
+      let value: string | number = cond.value
       if (!isNaN(Number(cond.value))) value = Number(cond.value)
-      if (/\d{4}-\d{2}-\d{2}/.test(cond.value)) value = new Date(cond.value)
 
       const filterObj = { [cond.field]: { [prismaOp]: value } }
       if (cond.logical === 'or') {

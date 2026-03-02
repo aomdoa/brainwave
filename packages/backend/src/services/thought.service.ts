@@ -38,6 +38,7 @@ export async function createThought(data: ThoughtServerCreate): Promise<Thought>
       body: parsed.data.body,
       status: parsed.data.status,
       nextReminder: parsed.data.nextReminder,
+      updatedAt: new Date(),
     },
   })
   serviceLog.debug(`createThought: ${JSON.stringify(thought)}`)
@@ -55,9 +56,16 @@ export async function updateThought(data: ThoughtServerUpdate): Promise<Thought>
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
   }
-  const { thoughtId, userId, ...updateData } = parsed.data
+  const { thoughtId, userId, ...updateData } = { ...parsed.data, updatedAt: new Date() }
   const thought = await prisma.thought.update({ where: { thoughtId, userId }, data: updateData })
   serviceLog.debug(`updatedThought: ${JSON.stringify(thought)}`)
+  return thought
+}
+
+export async function touchThought(data: Thought): Promise<Thought> {
+  const where = { thoughtId: data.thoughtId, userId: data.userId }
+  const thought = await prisma.thought.update({ where, data: { lastFollowUp: new Date() } })
+  serviceLog.debug(`touchThought: ${JSON.stringify(thought)}`)
   return thought
 }
 

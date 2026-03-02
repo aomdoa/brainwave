@@ -17,7 +17,7 @@ const internalValue = ref(props.modelValue ?? '')
 // Config for Flatpickr
 const fpConfig = {
   enableTime: true,
-  dateFormat: 'Y-m-d H:i', // YYYY-MM-DD HH:MM
+  dateFormat: 'Y-m-d H:i', // YYYY-MM-DD HH:mm
   time_24hr: true,
 }
 

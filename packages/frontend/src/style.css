@@ -54,7 +54,19 @@ a:hover {
 
 .form-group.actions {
   flex-direction: row;
-  justify-content: flex-end;
+}
+
+.form-display {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.form-column {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .field-error {

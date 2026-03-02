@@ -3,21 +3,35 @@
  */
 import { Router } from 'express'
 import { authMiddleware, AuthRequest, buildPageLink } from '../utils/express'
-import { createThought, deleteThought, getThought, searchThoughts, updateThought } from '../services/thought.service'
+import {
+  createThought,
+  deleteThought,
+  getThought,
+  searchThoughts,
+  touchThought,
+  updateThought,
+} from '../services/thought.service'
 import {
   ThoughtClient,
   thoughtClientSchema,
   ThoughtConfig,
-  ThoughtServer,
   ThoughtServerCreate,
   ThoughtServerUpdate,
 } from '@brainwave/shared'
 import config from '../utils/config'
+import { Thought } from '@prisma/client'
 
 export function registerThoughtRoute(): Router {
   const router = Router()
 
-  const toPublic = (thought: ThoughtServer): ThoughtClient => thoughtClientSchema.parse(thought)
+  const toPublic = (thought: Thought): ThoughtClient =>
+    thoughtClientSchema.parse({
+      ...thought,
+      createdAt: thought.createdAt.toISOString(),
+      updatedAt: thought.updatedAt.toISOString(),
+      lastFollowUp: thought.lastFollowUp != null ? thought.lastFollowUp.toISOString() : null,
+      nextReminder: thought.nextReminder != null ? thought.nextReminder.toISOString() : null,
+    })
 
   // public
   router.get('/config', (_req, res) => {
@@ -38,7 +52,7 @@ export function registerThoughtRoute(): Router {
         ...req.body,
       } as ThoughtServerCreate
       const thought = await createThought(thoughtData)
-      return res.json(thought)
+      return res.json(toPublic(thought))
     } catch (err) {
       return next(err)
     }
@@ -48,6 +62,7 @@ export function registerThoughtRoute(): Router {
     try {
       const thoughtId = Number(req.params.id)
       const thought = await getThought(thoughtId, req.userId ?? 0)
+      await touchThought(thought)
       return res.json(toPublic(thought))
     } catch (err) {
       return next(err)
