@@ -3,7 +3,7 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { ref, onMounted, reactive, watch } from 'vue'
-import { refDebounced } from '@vueuse/core'
+import { refDebounced, useBreakpoints } from '@vueuse/core'
 import { type ThoughtClient } from '@brainwave/shared'
 import { getThoughts, me } from '../api'
 import { router } from '../router'
@@ -20,6 +20,11 @@ const pagination = reactive({
   orderDesc: false,
 })
 const totalPages = ref(0)
+
+const breakpoints = useBreakpoints({
+  mobile: 768,
+})
+const isMobile = breakpoints.smaller('mobile')
 
 const debouncedSearch = refDebounced(search, 400)
 watch(debouncedSearch, () => {
@@ -104,13 +109,13 @@ onMounted(async () => {
               {{ pagination.orderDesc ? '▼' : '▲' }}
             </span>
           </th>
-          <th @click="sortBy('updatedAt')">
+          <th v-if="!isMobile" @click="sortBy('updatedAt')">
             Last Updated
             <span v-if="pagination.orderBy === 'updatedAt'">
               {{ pagination.orderDesc ? '▼' : '▲' }}
             </span>
           </th>
-          <th @click="sortBy('lastFollowUp')">
+          <th v-if="!isMobile" @click="sortBy('lastFollowUp')">
             Last Checked
             <span v-if="pagination.orderBy === 'lastFollowUp'">
               {{ pagination.orderDesc ? '▼' : '▲' }}
@@ -126,8 +131,8 @@ onMounted(async () => {
           class="clickable-row"
         >
           <td>{{ thought.title }}</td>
-          <td style="width: 16ch">{{ dayjs(thought.updatedAt).format('YYYY-MM-DD HH:mm') }}</td>
-          <td style="width: 16ch">
+          <td v-if="!isMobile" style="width: 16ch">{{ dayjs(thought.updatedAt).format('YYYY-MM-DD HH:mm') }}</td>
+          <td v-if="!isMobile" style="width: 16ch">
             {{ thought.lastFollowUp ? dayjs(thought.lastFollowUp).format('YYYY-MM-DD HH:mm') : 'Never' }}
           </td>
         </tr>

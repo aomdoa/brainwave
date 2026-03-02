@@ -7,12 +7,18 @@ import fs from 'fs'
 import path from 'path'
 import YAML from 'yamljs'
 import SwaggerParser from '@apidevtools/swagger-parser'
+import { config } from './config'
 
 export async function setupSwagger(app: express.Express) {
   const docsDir = path.join(__dirname, '../docs')
   const files = fs.readdirSync(docsDir).filter((f) => f.endsWith('.yaml'))
   let combinedSpec: any = {
     openapi: '3.0.0',
+    servers: [
+      {
+        url: config.DOCS_BASE,
+      },
+    ],
     info: { title: 'Brainwave API', version: '1.0.0', description: 'Welcome to the Brainwave API' },
     paths: {},
     components: { schemas: {}, securitySchemes: {} },
@@ -34,5 +40,15 @@ export async function setupSwagger(app: express.Express) {
   }
 
   const dereferencedSpec = await SwaggerParser.dereference(combinedSpec)
-  app.use('/docs', swaggerUi.serve, swaggerUi.setup(dereferencedSpec))
+  app.use('/docs', swaggerUi.serve)
+
+  app.get(
+    '/docs',
+    swaggerUi.setup(dereferencedSpec, {
+      customSiteTitle: 'Brainwave API',
+      swaggerOptions: {
+        docExpansion: 'none',
+      },
+    })
+  )
 }
