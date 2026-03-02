@@ -10,6 +10,8 @@ import { RegisterConfig } from '@brainwave/shared'
 
 export function registerAuthRoutes(): Router {
   const router = Router()
+
+  // public
   router.post('/register', async (req, res, next) => {
     try {
       const user = await createUser(req.body)
@@ -29,6 +31,15 @@ export function registerAuthRoutes(): Router {
     }
   })
 
+  router.get('/config', (_req, res) => {
+    const registerConfig = {
+      minNameLength: config.NAME_MIN_LENGTH,
+      minPasswordLength: config.PASSWORD_MIN_LENGTH,
+    } as RegisterConfig
+    return res.json(registerConfig)
+  })
+
+  // private
   router.get('/me', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
       const user = await getUser(req.userId ?? 0)
@@ -36,14 +47,6 @@ export function registerAuthRoutes(): Router {
     } catch (err) {
       return next(err)
     }
-  })
-
-  router.get('/config', (_req, res) => {
-    const registerConfig = {
-      minNameLength: config.NAME_MIN_LENGTH,
-      minPasswordLength: config.PASSWORD_MIN_LENGTH,
-    } as RegisterConfig
-    return res.json(registerConfig)
   })
 
   return router

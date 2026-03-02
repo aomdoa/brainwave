@@ -24,7 +24,7 @@ body {
 #app {
   max-width: 960px;
   margin: 0 auto;
-  padding: 0 5rem;
+  padding: 0 clamp(0.25rem, 5vw, 5rem);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -54,7 +54,19 @@ a:hover {
 
 .form-group.actions {
   flex-direction: row;
-  justify-content: flex-end;
+}
+
+.form-display {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.form-column {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .field-error {

@@ -6,6 +6,7 @@ import LoginPage from '../components/Login.vue'
 import DashboardPage from '../components/Dashboard.vue'
 import RegisterPage from '../components/Register.vue'
 import ErrorPage from '../components/Error.vue'
+import Thought from '../components/Thought.vue'
 
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/login' },
@@ -17,6 +18,7 @@ const routes: RouteRecordRaw[] = [
     component: DashboardPage,
     meta: { requiresAuth: true },
   },
+  { path: '/thoughts/:thoughtId?', component: Thought, meta: { requiresAuth: true } },
 ]
 
 export const router = createRouter({

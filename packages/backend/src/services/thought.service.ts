@@ -2,8 +2,16 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 
-import { Status, Thought } from '@prisma/client'
-import { createThoughtSchema, createThoughtSearchSchema, FilterCondition, SearchPageResults } from '@brainwave/shared'
+import { Thought } from '@prisma/client'
+import {
+  thoughtServerCreateSchema,
+  ThoughtServerCreate,
+  ThoughtServerUpdate,
+  thoughtServerUpdateSchema,
+  thoughtSearchParamsSchema,
+  SearchPage,
+  SearchFilter,
+} from '@brainwave/shared'
 import { config } from '../utils/config'
 import { NotFoundError, ValidationError } from '../utils/error'
 import { buildPrismaWhere, prisma } from '../utils/prisma'
@@ -11,33 +19,13 @@ import logger from '../utils/logger'
 
 const serviceLog = logger.child({ file: 'thought.service.ts' })
 
-export type CreateThought = {
-  userId: number
-  title: string
-  body: string
-  status: Status
-  nextReminder?: string
-}
-
-export type UpdateThought = {
-  thoughtId: number
-  userId: number
-  title?: string
-  body?: string
-  status?: Status
-  nextReminder?: string
-}
-
-export function getSchema() {
-  return createThoughtSchema({
+export async function createThought(data: ThoughtServerCreate): Promise<Thought> {
+  const schema = thoughtServerCreateSchema({
     minTitleLength: config.THOUGHT_TITLE_MIN_LENGTH,
     maxTitleLength: config.THOUGHT_TITLE_MAX_LENGTH,
     minBodyLength: config.THOUGHT_BODY_MIN_LENGTH,
     maxBodyLength: config.THOUGHT_BODY_MAX_LENGTH,
   })
-}
-export async function createThought(data: CreateThought): Promise<Thought> {
-  const schema = getSchema()
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
@@ -50,21 +38,34 @@ export async function createThought(data: CreateThought): Promise<Thought> {
       body: parsed.data.body,
       status: parsed.data.status,
       nextReminder: parsed.data.nextReminder,
+      updatedAt: new Date(),
     },
   })
   serviceLog.debug(`createThought: ${JSON.stringify(thought)}`)
   return thought
 }
 
-export async function updateThought(data: UpdateThought): Promise<Thought> {
-  const schema = getSchema().partial()
+export async function updateThought(data: ThoughtServerUpdate): Promise<Thought> {
+  const schema = thoughtServerUpdateSchema({
+    minTitleLength: config.THOUGHT_TITLE_MIN_LENGTH,
+    maxTitleLength: config.THOUGHT_TITLE_MAX_LENGTH,
+    minBodyLength: config.THOUGHT_BODY_MIN_LENGTH,
+    maxBodyLength: config.THOUGHT_BODY_MAX_LENGTH,
+  })
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
   }
-  const { thoughtId, userId, ...updateData } = data
+  const { thoughtId, userId, ...updateData } = { ...parsed.data, updatedAt: new Date() }
   const thought = await prisma.thought.update({ where: { thoughtId, userId }, data: updateData })
   serviceLog.debug(`updatedThought: ${JSON.stringify(thought)}`)
+  return thought
+}
+
+export async function touchThought(data: Thought): Promise<Thought> {
+  const where = { thoughtId: data.thoughtId, userId: data.userId }
+  const thought = await prisma.thought.update({ where, data: { lastFollowUp: new Date() } })
+  serviceLog.debug(`touchThought: ${JSON.stringify(thought)}`)
   return thought
 }
 
@@ -89,29 +90,33 @@ export async function deleteThought(thoughtId: number, userId: number): Promise<
 export async function searchThoughts(
   rawSearch: unknown,
   userId: number
-): Promise<{ data: Thought[]; page: SearchPageResults }> {
-  const schema = createThoughtSearchSchema({
+): Promise<{ data: Thought[]; page: SearchPage }> {
+  const schema = thoughtSearchParamsSchema({
     pageSizeMaximum: config.PAGE_SIZE_MAXIMUM,
     pageSizeDefault: config.PAGE_SIZE_DEFAULT,
   })
+
   const parsed = schema.safeParse(rawSearch)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
   }
 
-  const search = buildPrismaWhere(parsed.data.filter as FilterCondition[], ['title', 'body'], parsed.data.search)
+  const search = buildPrismaWhere(parsed.data.filter as SearchFilter[], ['title', 'body'], parsed.data.search)
   const where = { userId, ...search }
-
+  const params = {
+    where,
+    orderBy: { [parsed.data.orderBy.field]: parsed.data.orderBy.direction },
+    skip: (parsed.data.page - 1) * parsed.data.size,
+    take: parsed.data.size,
+  }
   const [thoughts, count] = await prisma.$transaction([
-    prisma.thought.findMany({
-      where,
-      orderBy: { [parsed.data.orderBy.field]: parsed.data.orderBy.direction },
-      skip: (parsed.data.page - 1) * parsed.data.size,
-      take: parsed.data.size,
-    }),
+    prisma.thought.findMany(params),
     prisma.thought.count({ where }),
   ])
 
+  serviceLog.debug(
+    `searchThoughts ${JSON.stringify(params)} with results ${JSON.stringify(thoughts)} and total length ${count}`
+  )
   return {
     data: thoughts,
     page: {

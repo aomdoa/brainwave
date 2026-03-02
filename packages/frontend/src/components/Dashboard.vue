@@ -2,12 +2,92 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { ref, onMounted } from 'vue'
-import { me } from '../api'
+import { ref, onMounted, reactive, watch } from 'vue'
+import { refDebounced, useBreakpoints } from '@vueuse/core'
+import { type ThoughtClient } from '@brainwave/shared'
+import { getThoughts, me } from '../api'
+import { router } from '../router'
+import dayjs from 'dayjs'
 
+const pageSize = 20
 const user = ref<{ id: number; email: string; name?: string } | null>(null)
+const search = ref('')
+const thoughts = ref<ThoughtClient[]>([])
+const pagination = reactive({
+  currentPage: 1,
+  currentPageSize: 0,
+  orderBy: 'lastFollowUp',
+  orderDesc: false,
+})
+const totalPages = ref(0)
+
+const breakpoints = useBreakpoints({
+  mobile: 768,
+})
+const isMobile = breakpoints.smaller('mobile')
+
+const debouncedSearch = refDebounced(search, 400)
+watch(debouncedSearch, () => {
+  onSearch()
+})
+
+const onSearch = () => {
+  fetchThoughts()
+}
+
+const nextPage = () => {
+  const newPage = pagination.currentPage + 1
+  if (newPage <= totalPages.value) {
+    pagination.currentPage = newPage
+    fetchThoughts()
+  }
+}
+
+const prevPage = () => {
+  const newPage = pagination.currentPage - 1
+  if (newPage > 0) {
+    pagination.currentPage = newPage
+    fetchThoughts()
+  }
+}
+
+const sortBy = (name: string) => {
+  pagination.currentPage = 1
+  if (pagination.orderBy === name) {
+    pagination.orderDesc = !pagination.orderDesc
+  } else {
+    pagination.orderBy = name
+    pagination.orderDesc = true
+  }
+  fetchThoughts()
+}
+
+const create = () => {
+  router.push('/thoughts/')
+}
+
+const goToThought = (id: number) => {
+  router.push(`/thoughts/${id}`)
+}
+
+const fetchThoughts = async () => {
+  const { thoughts: fetchedThoughts, page } = await getThoughts({
+    orderBy: {
+      field: pagination.orderBy,
+      direction: pagination.orderDesc ? 'desc' : 'asc',
+    },
+    search: search.value.length > 0 ? search.value : undefined,
+    page: pagination.currentPage,
+    size: pageSize,
+  })
+  pagination.currentPage = page.current
+  pagination.currentPageSize = page.size
+  totalPages.value = page.totalPages
+  thoughts.value = fetchedThoughts
+}
 
 onMounted(async () => {
+  await fetchThoughts()
   user.value = await me()
 })
 </script>
@@ -15,6 +95,96 @@ onMounted(async () => {
 <template>
   <div v-if="user">
     <h1>Welcome, {{ user.name || user.email }}!</h1>
+    <div class="controls">
+      <input type="text" v-model="search" @keyup.enter="onSearch()" placeholder="Search thoughts..." />
+      <button @click="create">Add Thought</button>
+    </div>
+
+    <table class="thoughts-table">
+      <thead>
+        <tr>
+          <th @click="sortBy('title')">
+            Title
+            <span v-if="pagination.orderBy === 'title'">
+              {{ pagination.orderDesc ? '▼' : '▲' }}
+            </span>
+          </th>
+          <th v-if="!isMobile" @click="sortBy('updatedAt')">
+            Last Updated
+            <span v-if="pagination.orderBy === 'updatedAt'">
+              {{ pagination.orderDesc ? '▼' : '▲' }}
+            </span>
+          </th>
+          <th v-if="!isMobile" @click="sortBy('lastFollowUp')">
+            Last Checked
+            <span v-if="pagination.orderBy === 'lastFollowUp'">
+              {{ pagination.orderDesc ? '▼' : '▲' }}
+            </span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="thought in thoughts"
+          :key="thought.thoughtId"
+          @click="goToThought(thought.thoughtId)"
+          class="clickable-row"
+        >
+          <td>{{ thought.title }}</td>
+          <td v-if="!isMobile" style="width: 16ch">{{ dayjs(thought.updatedAt).format('YYYY-MM-DD HH:mm') }}</td>
+          <td v-if="!isMobile" style="width: 16ch">
+            {{ thought.lastFollowUp ? dayjs(thought.lastFollowUp).format('YYYY-MM-DD HH:mm') : 'Never' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pagination">
+      <button :disabled="pagination.currentPage === 1" @click="prevPage">Prev</button>
+      <span>Page {{ pagination.currentPage }} of {{ totalPages }}</span>
+      <button :disabled="pagination.currentPage === totalPages" @click="nextPage">Next</button>
+    </div>
   </div>
   <div v-else>Loading...</div>
 </template>
+
+<style scoped>
+.thoughts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.thoughts-table th,
+.thoughts-table td {
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+.thoughts-table th {
+  cursor: pointer;
+  user-select: none;
+}
+.clickable-row {
+  cursor: pointer;
+}
+.clickable-row:hover {
+  background-color: #f0f0f0;
+}
+.controls {
+  display: flex;
+  margin-bottom: 1rem;
+}
+.controls input {
+  width: 20rem;
+}
+.controls button {
+  margin-left: auto;
+}
+.pagination {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.pagination button {
+  margin: 0 0.5rem;
+}
+</style>
