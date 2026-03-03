@@ -2,7 +2,7 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 
-import { PrismaClient, Status } from '@prisma/client'
+import { PrismaClient, Status, Tag, Thought } from '@prisma/client'
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended'
 import { prisma } from '../../src/utils/prisma'
 import {
@@ -11,7 +11,13 @@ import {
   getThought,
   deleteThought,
   searchThoughts,
+  touchThought,
+  updateThoughtTags,
+  addThoughtTag,
+  remThoughtTag,
 } from '../../src/services/thought.service'
+import { baseThought, date, makeTag, makeTags, makeThought } from '../data.factory'
+import { getTag, getTagsByIds } from '../../src/services/tag.service'
 import { NotFoundError, ValidationError } from '../../src/utils/error'
 
 jest.mock('../../src/utils/prisma', () => ({
@@ -19,22 +25,13 @@ jest.mock('../../src/utils/prisma', () => ({
   prisma: mockDeep<PrismaClient>(),
 }))
 
+jest.mock('../../src/services/tag.service', () => ({
+  getTagsByIds: jest.fn(),
+  getTag: jest.fn(),
+}))
+
 describe('thought.service', () => {
   let mockPrisma: DeepMockProxy<PrismaClient>
-
-  const date = new Date('2026-01-01T00:00:00.000Z')
-
-  const baseThought = {
-    thoughtId: 1,
-    userId: 10,
-    title: 'Test title',
-    body: 'Test body',
-    status: Status.ACTIVE,
-    nextReminder: date,
-    createdAt: date,
-    updatedAt: date,
-    lastFollowUp: date,
-  }
 
   beforeEach(() => {
     mockPrisma = prisma as unknown as DeepMockProxy<PrismaClient>
@@ -114,6 +111,7 @@ describe('thought.service', () => {
 
       expect(mockPrisma.thought.findUnique).toHaveBeenCalledWith({
         where: { thoughtId: 1, userId: 10 },
+        include: { tags: true },
       })
 
       expect(result).toEqual(baseThought)
@@ -182,6 +180,70 @@ describe('thought.service', () => {
 
       await expect(searchThoughts(bad, 10)).rejects.toThrow(ValidationError)
       expect(mockPrisma.$transaction).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('touchThought', () => {
+    it('successful touch', async () => {
+      mockPrisma.thought.update.mockResolvedValue(baseThought)
+
+      const result = await touchThought(baseThought)
+
+      expect(mockPrisma.thought.update).toHaveBeenCalledWith({
+        where: { thoughtId: baseThought.thoughtId, userId: baseThought.userId },
+        data: expect.objectContaining({ lastFollowUp: expect.any(Date) }),
+      })
+
+      expect(result).toEqual(baseThought)
+    })
+  })
+
+  describe('updateThoughtTags', () => {
+    it('successful update with list', async () => {
+      const tags = makeTags(2)
+      const mockGetTagsByIds = getTagsByIds as jest.Mock
+      mockGetTagsByIds.mockResolvedValue(tags)
+      mockPrisma.thought.update.mockResolvedValue(makeThought({ tags }))
+      const result = (await updateThoughtTags(1, [1, 2], 10)) as Thought & { tags?: Tag[] }
+      expect(mockGetTagsByIds).toHaveBeenCalledWith([1, 2], 10)
+      expect(mockPrisma.thought.update).toHaveBeenCalledWith({
+        where: { thoughtId: baseThought.thoughtId, userId: baseThought.userId },
+        data: { tags: { set: [{ tagId: 1 }, { tagId: 2 }] } },
+        include: { tags: true },
+      })
+      expect(result.tags).toBe(tags)
+    })
+  })
+
+  describe('addThoughtTag', () => {
+    it('successful addition', async () => {
+      const tag = makeTag()
+      const mockGetTag = getTag as jest.Mock
+      mockGetTag.mockResolvedValue(tag)
+      mockPrisma.thought.update.mockResolvedValue(makeThought({ tags: [tag] }))
+      const thought = await addThoughtTag(1, 1, 10)
+      expect(mockGetTag).toHaveBeenCalledWith(1, 10)
+      expect(mockPrisma.thought.update).toHaveBeenCalledWith({
+        where: { thoughtId: baseThought.thoughtId, userId: baseThought.userId },
+        data: { tags: { connect: { tagId: 1 } } },
+        include: { tags: true },
+      })
+    })
+  })
+
+  describe('remThoughtTag', () => {
+    it('successful removal', async () => {
+      const tag = makeTag()
+      const mockGetTag = getTag as jest.Mock
+      mockGetTag.mockResolvedValue(tag)
+      mockPrisma.thought.update.mockResolvedValue(makeThought({ tags: [] }))
+      const thought = await remThoughtTag(1, 1, 10)
+      expect(mockGetTag).toHaveBeenCalledWith(1, 10)
+      expect(mockPrisma.thought.update).toHaveBeenCalledWith({
+        where: { thoughtId: baseThought.thoughtId, userId: baseThought.userId },
+        data: { tags: { disconnect: { tagId: 1 } } },
+        include: { tags: true },
+      })
     })
   })
 })

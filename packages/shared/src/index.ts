@@ -4,3 +4,4 @@
 export * from './register.schema'
 export * from './search.schema'
 export * from './thought.schema'
+export * from './tag.schema'

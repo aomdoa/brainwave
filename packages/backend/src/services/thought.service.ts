@@ -16,16 +16,20 @@ import { config } from '../utils/config'
 import { NotFoundError, ValidationError } from '../utils/error'
 import { buildPrismaWhere, prisma } from '../utils/prisma'
 import logger from '../utils/logger'
+import { getTag, getTagsByIds } from './tag.service'
 
 const serviceLog = logger.child({ file: 'thought.service.ts' })
 
+function getSchemaConfig() {
+  return {
+    minTitleLength: config.TITLE_MIN_LENGTH,
+    maxTitleLength: config.TITLE_MAX_LENGTH,
+    minBodyLength: config.BODY_MIN_LENGTH,
+    maxBodyLength: config.BODY_MAX_LENGTH,
+  }
+}
 export async function createThought(data: ThoughtServerCreate): Promise<Thought> {
-  const schema = thoughtServerCreateSchema({
-    minTitleLength: config.THOUGHT_TITLE_MIN_LENGTH,
-    maxTitleLength: config.THOUGHT_TITLE_MAX_LENGTH,
-    minBodyLength: config.THOUGHT_BODY_MIN_LENGTH,
-    maxBodyLength: config.THOUGHT_BODY_MAX_LENGTH,
-  })
+  const schema = thoughtServerCreateSchema(getSchemaConfig())
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
@@ -46,12 +50,7 @@ export async function createThought(data: ThoughtServerCreate): Promise<Thought>
 }
 
 export async function updateThought(data: ThoughtServerUpdate): Promise<Thought> {
-  const schema = thoughtServerUpdateSchema({
-    minTitleLength: config.THOUGHT_TITLE_MIN_LENGTH,
-    maxTitleLength: config.THOUGHT_TITLE_MAX_LENGTH,
-    minBodyLength: config.THOUGHT_BODY_MIN_LENGTH,
-    maxBodyLength: config.THOUGHT_BODY_MAX_LENGTH,
-  })
+  const schema = thoughtServerUpdateSchema(getSchemaConfig())
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
@@ -59,6 +58,36 @@ export async function updateThought(data: ThoughtServerUpdate): Promise<Thought>
   const { thoughtId, userId, ...updateData } = { ...parsed.data, updatedAt: new Date() }
   const thought = await prisma.thought.update({ where: { thoughtId, userId }, data: updateData })
   serviceLog.debug(`updatedThought: ${JSON.stringify(thought)}`)
+  return thought
+}
+
+export async function updateThoughtTags(thoughtId: number, tagIds: number[], userId: number): Promise<Thought> {
+  const tags = await getTagsByIds(tagIds, userId)
+  const thought = await prisma.thought.update({
+    where: { thoughtId, userId },
+    data: { tags: { set: tags.map((t) => ({ tagId: t.tagId })) } },
+    include: { tags: true },
+  })
+  return thought
+}
+
+export async function addThoughtTag(thoughtId: number, tagId: number, userId: number): Promise<Thought> {
+  const tag = await getTag(tagId, userId)
+  const thought = await prisma.thought.update({
+    where: { thoughtId, userId },
+    data: { tags: { connect: { tagId: tag.tagId } } },
+    include: { tags: true },
+  })
+  return thought
+}
+
+export async function remThoughtTag(thoughtId: number, tagId: number, userId: number): Promise<Thought> {
+  const tag = await getTag(tagId, userId)
+  const thought = await prisma.thought.update({
+    where: { thoughtId, userId },
+    data: { tags: { disconnect: { tagId: tag.tagId } } },
+    include: { tags: true },
+  })
   return thought
 }
 
@@ -70,7 +99,7 @@ export async function touchThought(data: Thought): Promise<Thought> {
 }
 
 export async function getThought(thoughtId: number, userId: number): Promise<Thought> {
-  const thought = await prisma.thought.findUnique({ where: { thoughtId, userId } })
+  const thought = await prisma.thought.findUnique({ where: { thoughtId, userId }, include: { tags: true } })
   if (thought == null) {
     throw new NotFoundError(`thought id ${thoughtId} could not be found`)
   }
@@ -102,7 +131,9 @@ export async function searchThoughts(
   }
 
   const search = buildPrismaWhere(parsed.data.filter as SearchFilter[], ['title', 'body'], parsed.data.search)
-  const where = { userId, ...search }
+  const tagIds = parsed.data.tagId ? { tags: { some: { tagId: { in: parsed.data.tagId } } } } : {}
+  const where = { userId, ...tagIds, ...search }
+
   const params = {
     where,
     orderBy: { [parsed.data.orderBy.field]: parsed.data.orderBy.direction },
