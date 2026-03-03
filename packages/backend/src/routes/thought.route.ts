@@ -21,7 +21,7 @@ import {
 import config from '../utils/config'
 import { Thought } from '@prisma/client'
 
-export function registerThoughtRoute(): Router {
+export function registerThoughtRoutes(): Router {
   const router = Router()
 
   const toPublic = (thought: Thought): ThoughtClient =>
@@ -36,10 +36,10 @@ export function registerThoughtRoute(): Router {
   // public
   router.get('/config', (_req, res) => {
     const thoughtConfig = {
-      minTitleLength: config.THOUGHT_TITLE_MIN_LENGTH,
-      maxTitleLength: config.THOUGHT_TITLE_MAX_LENGTH,
-      minBodyLength: config.THOUGHT_BODY_MIN_LENGTH,
-      maxBodyLength: config.THOUGHT_BODY_MAX_LENGTH,
+      minTitleLength: config.TITLE_MIN_LENGTH,
+      maxTitleLength: config.TITLE_MAX_LENGTH,
+      minBodyLength: config.BODY_MIN_LENGTH,
+      maxBodyLength: config.BODY_MAX_LENGTH,
     } as ThoughtConfig
     return res.json(thoughtConfig)
   })

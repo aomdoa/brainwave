@@ -19,13 +19,16 @@ import logger from '../utils/logger'
 
 const serviceLog = logger.child({ file: 'thought.service.ts' })
 
+function getSchemaConfig() {
+  return {
+    minTitleLength: config.TITLE_MIN_LENGTH,
+    maxTitleLength: config.TITLE_MAX_LENGTH,
+    minBodyLength: config.BODY_MIN_LENGTH,
+    maxBodyLength: config.BODY_MAX_LENGTH,
+  }
+}
 export async function createThought(data: ThoughtServerCreate): Promise<Thought> {
-  const schema = thoughtServerCreateSchema({
-    minTitleLength: config.THOUGHT_TITLE_MIN_LENGTH,
-    maxTitleLength: config.THOUGHT_TITLE_MAX_LENGTH,
-    minBodyLength: config.THOUGHT_BODY_MIN_LENGTH,
-    maxBodyLength: config.THOUGHT_BODY_MAX_LENGTH,
-  })
+  const schema = thoughtServerCreateSchema(getSchemaConfig())
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
@@ -46,12 +49,7 @@ export async function createThought(data: ThoughtServerCreate): Promise<Thought>
 }
 
 export async function updateThought(data: ThoughtServerUpdate): Promise<Thought> {
-  const schema = thoughtServerUpdateSchema({
-    minTitleLength: config.THOUGHT_TITLE_MIN_LENGTH,
-    maxTitleLength: config.THOUGHT_TITLE_MAX_LENGTH,
-    minBodyLength: config.THOUGHT_BODY_MIN_LENGTH,
-    maxBodyLength: config.THOUGHT_BODY_MAX_LENGTH,
-  })
+  const schema = thoughtServerUpdateSchema(getSchemaConfig())
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)

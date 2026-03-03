@@ -11,6 +11,7 @@ import {
   getThought,
   deleteThought,
   searchThoughts,
+  touchThought,
 } from '../../src/services/thought.service'
 import { NotFoundError, ValidationError } from '../../src/utils/error'
 
@@ -182,6 +183,21 @@ describe('thought.service', () => {
 
       await expect(searchThoughts(bad, 10)).rejects.toThrow(ValidationError)
       expect(mockPrisma.$transaction).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('touchThought', () => {
+    it('successful touch', async () => {
+      mockPrisma.thought.update.mockResolvedValue(baseThought)
+
+      const result = await touchThought(baseThought)
+
+      expect(mockPrisma.thought.update).toHaveBeenCalledWith({
+        where: { thoughtId: baseThought.thoughtId, userId: baseThought.userId },
+        data: expect.objectContaining({ lastFollowUp: expect.any(Date) }),
+      })
+
+      expect(result).toEqual(baseThought)
     })
   })
 })

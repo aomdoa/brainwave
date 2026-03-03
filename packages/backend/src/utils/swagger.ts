@@ -8,12 +8,10 @@ import path from 'path'
 import YAML from 'yamljs'
 import SwaggerParser from '@apidevtools/swagger-parser'
 import { config } from './config'
-import logger from './logger'
 
 export async function setupSwagger(app: express.Express) {
   const docsDir = path.join(__dirname, '../docs')
   const files = fs.readdirSync(docsDir).filter((f) => f.endsWith('.yaml'))
-  logger.info(`USING URL ${config.DOCS_BASE}`)
   let combinedSpec: any = {
     openapi: '3.0.0',
     servers: [

@@ -8,7 +8,8 @@ import logger from './utils/logger'
 import { AppError } from './utils/error'
 import { registerAuthRoutes } from './routes/auth.route'
 import { registerHealthRoutes } from './routes/health.route'
-import { registerThoughtRoute } from './routes/thought.route'
+import { registerThoughtRoutes } from './routes/thought.route'
+import { registerTagRoutes } from './routes/tag.route'
 import { setupSwagger } from './utils/swagger'
 
 const serviceLog = logger.child({ file: 'express.ts' })
@@ -55,7 +56,8 @@ export function initialize(): Express {
 
   // Register routes
   app.use('/auth', registerAuthRoutes())
-  app.use('/thoughts', registerThoughtRoute())
+  app.use('/thoughts', registerThoughtRoutes())
+  app.use('/tags', registerTagRoutes())
   app.use('/health', registerHealthRoutes())
 
   // Swagger
