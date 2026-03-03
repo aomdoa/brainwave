@@ -3,6 +3,7 @@
  */
 import { z } from 'zod'
 import { searchLinksSchema, searchPageSchema, SearchResultConfig, searchSchema } from './search.schema'
+import { tagBaseSchema, tagClientSchema, tagServerSchema } from './tag.schema'
 
 export interface ThoughtConfig {
   minTitleLength: number
@@ -26,15 +27,17 @@ export const thoughtBaseSchema = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
   lastFollowUp: z.iso.datetime().nullable(),
+  tags: z.array(tagBaseSchema).optional(),
 })
 
 export const thoughtServerSchema = thoughtBaseSchema
   .extend({
     userId: z.number().positive(),
+    tags: z.array(tagServerSchema).optional(),
   })
   .strict()
 
-export const thoughtClientSchema = thoughtBaseSchema.strip()
+export const thoughtClientSchema = thoughtBaseSchema.extend({ tags: z.array(tagClientSchema).optional() }).strip()
 export type ThoughtServer = z.infer<typeof thoughtServerSchema>
 export type ThoughtClient = z.infer<typeof thoughtClientSchema>
 
@@ -80,7 +83,14 @@ export const thoughtSearchResultsSchema = z
   })
   .strict()
 export const thoughtSearchParamsSchema = (config: SearchResultConfig) =>
-  searchSchema(config, THOUGHT_SEARCH_FILTERS, THOUGHT_SEARCH_ORDERS)
+  searchSchema(config, THOUGHT_SEARCH_FILTERS, THOUGHT_SEARCH_ORDERS).extend({
+    tagId: z
+      .preprocess((val) => {
+        if (val == null) return undefined
+        return Array.isArray(val) ? val.map(Number) : [Number(val)] // always array
+      }, z.array(z.number().positive()))
+      .optional(),
+  })
 
 export type ThoughtSearchResults = z.infer<typeof thoughtSearchResultsSchema>
 export type ThoughtSearchParams = z.infer<typeof thoughtSearchParamsSchema>

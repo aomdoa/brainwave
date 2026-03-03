@@ -9,15 +9,15 @@ import { Tag } from '@prisma/client'
 import { createTag, deleteTag, getTag, getTagByName, getTags, updateTag } from '../services/tag.service'
 import { ConflictError } from '../utils/error'
 
+export const publicTag = (tag: Tag): TagClient =>
+  tagClientSchema.parse({
+    ...tag,
+    createdAt: tag.createdAt.toISOString(),
+    updatedAt: tag.updatedAt.toISOString(),
+  })
+
 export function registerTagRoutes(): Router {
   const router = Router()
-
-  const toPublic = (tag: Tag): TagClient =>
-    tagClientSchema.parse({
-      ...tag,
-      createdAt: tag.createdAt.toISOString(),
-      updatedAt: tag.updatedAt.toISOString(),
-    })
 
   // public
   router.get('/config', (_req, res) => {
@@ -33,7 +33,7 @@ export function registerTagRoutes(): Router {
   router.get('/', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
       const tags = await getTags(req.userId ?? 0)
-      return res.json(tags.map(toPublic))
+      return res.json(tags.map(publicTag))
     } catch (err) {
       return next(err)
     }
@@ -50,7 +50,7 @@ export function registerTagRoutes(): Router {
         throw new ConflictError(`A tag with name ${tagData.name} already exists`)
       }
       const tag = await createTag(tagData)
-      return res.json(toPublic(tag))
+      return res.json(publicTag(tag))
     } catch (err) {
       return next(err)
     }
@@ -60,7 +60,7 @@ export function registerTagRoutes(): Router {
     try {
       const tagId = Number(req.params.id)
       const tag = await getTag(tagId, req.userId ?? 0)
-      return res.json(toPublic(tag))
+      return res.json(publicTag(tag))
     } catch (err) {
       return next(err)
     }
@@ -81,7 +81,7 @@ export function registerTagRoutes(): Router {
         }
       }
       const tag = await updateTag(tagData)
-      return res.json(toPublic(tag))
+      return res.json(publicTag(tag))
     } catch (err) {
       return next(err)
     }
@@ -91,7 +91,7 @@ export function registerTagRoutes(): Router {
     try {
       const tagId = Number(req.params.id)
       const tag = await deleteTag(tagId, req.userId ?? 0)
-      return res.json(toPublic(tag))
+      return res.json(publicTag(tag))
     } catch (err) {
       return next(err)
     }

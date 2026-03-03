@@ -55,6 +55,12 @@ export async function getTagByName(name: string, userId: number): Promise<Tag | 
   return tag
 }
 
+export async function getTagsByIds(tagIds: number[], userId: number): Promise<Tag[]> {
+  const tags = await prisma.tag.findMany({ where: { tagId: { in: tagIds }, userId } })
+  serviceLog.debug(`getTagsByIds ${tagIds.length} with ${tags.length} found`)
+  return tags
+}
+
 export async function getTag(tagId: number, userId: number): Promise<Tag> {
   const tag = await prisma.tag.findUnique({ where: { tagId, userId } })
   if (tag == null) {

@@ -32,7 +32,7 @@ export type TagClient = z.infer<typeof tagClientSchema>
 export const tagBaseCreateSchema = (config: TagConfig) =>
   z.object({
     name: z.string().min(config.minNameLength).max(config.maxNameLength).trim(),
-    notes: z.string().max(config.maxNotesLength).trim().optional(),
+    notes: z.string().max(config.maxNotesLength).trim().default(''),
   })
 
 export const tagServerCreateSchema = (config: TagConfig) =>

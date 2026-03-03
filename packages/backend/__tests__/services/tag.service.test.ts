@@ -5,7 +5,16 @@
 import { PrismaClient, Status } from '@prisma/client'
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended'
 import { prisma } from '../../src/utils/prisma'
-import { createTag, updateTag, getTag, getTags, getTagByName, deleteTag } from '../../src/services/tag.service'
+import {
+  createTag,
+  updateTag,
+  getTag,
+  getTags,
+  getTagByName,
+  deleteTag,
+  getTagsByIds,
+} from '../../src/services/tag.service'
+import { baseTag } from '../data.factory'
 import { NotFoundError, ValidationError } from '../../src/utils/error'
 
 jest.mock('../../src/utils/prisma', () => ({
@@ -15,17 +24,6 @@ jest.mock('../../src/utils/prisma', () => ({
 
 describe('tag.service', () => {
   let mockPrisma: DeepMockProxy<PrismaClient>
-
-  const date = new Date('2026-01-01T00:00:00.000Z')
-
-  const baseTag = {
-    tagId: 1,
-    name: 'Tag Name',
-    notes: 'Notes',
-    userId: 5,
-    createdAt: date,
-    updatedAt: date,
-  }
 
   beforeEach(() => {
     mockPrisma = prisma as unknown as DeepMockProxy<PrismaClient>
@@ -160,6 +158,20 @@ describe('tag.service', () => {
 
       expect(mockPrisma.tag.findMany).toHaveBeenCalledWith({
         where: { userId: 10 },
+      })
+
+      expect(result).toEqual([baseTag])
+    })
+  })
+
+  describe('getTagsByIds', () => {
+    it('simple get', async () => {
+      mockPrisma.tag.findMany.mockResolvedValue([baseTag])
+
+      const result = await getTagsByIds([1, 10], 10)
+
+      expect(mockPrisma.tag.findMany).toHaveBeenCalledWith({
+        where: { userId: 10, tagId: { in: [1, 10] } },
       })
 
       expect(result).toEqual([baseTag])
