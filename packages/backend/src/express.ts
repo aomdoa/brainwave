@@ -16,6 +16,7 @@ const serviceLog = logger.child({ file: 'express.ts' })
 // Provides the core initialization and startup of the Express server, including error handling and request logging
 export function initialize(): Express {
   const app = express()
+  app.set('trust proxy', true)
 
   // eslint-disable-next-line no-unused-vars
   const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
