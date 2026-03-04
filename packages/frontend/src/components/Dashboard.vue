@@ -4,14 +4,16 @@
  */
 import { ref, onMounted, reactive, watch } from 'vue'
 import { refDebounced, useBreakpoints } from '@vueuse/core'
-import { type ThoughtClient } from '@brainwave/shared'
-import { getThoughts, me } from '../api'
+import { type TagClient, type ThoughtClient } from '@brainwave/shared'
+import { getTags, getThoughts, me } from '../api'
 import { router } from '../router'
 import dayjs from 'dayjs'
 
+let tags: TagClient[] = []
 const pageSize = 20
 const user = ref<{ id: number; email: string; name?: string } | null>(null)
 const search = ref('')
+const tag = ref<TagClient | null>(null)
 const thoughts = ref<ThoughtClient[]>([])
 const pagination = reactive({
   currentPage: 1,
@@ -70,7 +72,12 @@ const goToThought = (id: number) => {
   router.push(`/thoughts/${id}`)
 }
 
+const selectTag = () => {
+  fetchThoughts()
+}
+
 const fetchThoughts = async () => {
+  console.log(`tag value is ${tag.value?.tagId}`)
   const { thoughts: fetchedThoughts, page } = await getThoughts({
     orderBy: {
       field: pagination.orderBy,
@@ -79,6 +86,8 @@ const fetchThoughts = async () => {
     search: search.value.length > 0 ? search.value : undefined,
     page: pagination.currentPage,
     size: pageSize,
+    tagId: tag.value?.tagId ? [tag.value.tagId] : undefined,
+    filter: [],
   })
   pagination.currentPage = page.current
   pagination.currentPageSize = page.size
@@ -87,6 +96,7 @@ const fetchThoughts = async () => {
 }
 
 onMounted(async () => {
+  tags = await getTags()
   await fetchThoughts()
   user.value = await me()
 })
@@ -97,6 +107,16 @@ onMounted(async () => {
     <h1>Welcome, {{ user.name || user.email }}!</h1>
     <div class="controls">
       <input type="text" v-model="search" @keyup.enter="onSearch()" placeholder="Search thoughts..." />
+      <Select
+        @change="selectTag"
+        class="tag-select"
+        v-model="tag"
+        :options="tags"
+        optionLabel="name"
+        placeholder="Tag..."
+        showClear
+        :title="tag?.name"
+      />
       <button @click="create">Add Thought</button>
     </div>
 
@@ -131,8 +151,8 @@ onMounted(async () => {
           class="clickable-row"
         >
           <td>{{ thought.title }}</td>
-          <td v-if="!isMobile" style="width: 16ch">{{ dayjs(thought.updatedAt).format('YYYY-MM-DD HH:mm') }}</td>
-          <td v-if="!isMobile" style="width: 16ch">
+          <td v-if="!isMobile" style="width: 18ch">{{ dayjs(thought.updatedAt).format('YYYY-MM-DD HH:mm') }}</td>
+          <td v-if="!isMobile" style="width: 18ch">
             {{ thought.lastFollowUp ? dayjs(thought.lastFollowUp).format('YYYY-MM-DD HH:mm') : 'Never' }}
           </td>
         </tr>
@@ -186,5 +206,9 @@ onMounted(async () => {
 }
 .pagination button {
   margin: 0 0.5rem;
+}
+.tag-select {
+  margin-left: 1rem;
+  width: 12rem;
 }
 </style>

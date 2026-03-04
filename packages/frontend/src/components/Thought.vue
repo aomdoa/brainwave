@@ -5,11 +5,10 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import dayjs from 'dayjs'
-import { thoughtClientCreateSchema, type TagClient, type ThoughtClient } from '@brainwave/shared'
 import { deleteThought, getTags, getThoughtById, getThoughtConfig, saveTag, saveThought, saveThoughtTags } from '../api'
 import DateTime from './DateTime.vue'
 import { router } from '../router'
-import { value } from '@primeuix/themes/aura/knob'
+import { type TagClient, type ThoughtClient, thoughtClientCreateSchema } from '@brainwave/shared'
 
 const route = useRoute()
 /**

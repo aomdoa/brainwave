@@ -93,4 +93,4 @@ export const thoughtSearchParamsSchema = (config: SearchResultConfig) =>
   })
 
 export type ThoughtSearchResults = z.infer<typeof thoughtSearchResultsSchema>
-export type ThoughtSearchParams = z.infer<typeof thoughtSearchParamsSchema>
+export type ThoughtSearchParams = z.infer<ReturnType<typeof thoughtSearchParamsSchema>>

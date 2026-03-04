@@ -15,6 +15,7 @@ import type {
   ThoughtClientCreate,
   ThoughtClientUpdate,
   ThoughtConfig,
+  ThoughtSearchParams,
   ThoughtSearchResults,
 } from '@brainwave/shared'
 
@@ -48,9 +49,8 @@ api.interceptors.response.use(
 )
 
 // Build the search
-export function buildSearchQuery(params: SearchClientSchema): string {
+export function buildSearchQuery(params: SearchClientSchema): URLSearchParams {
   const query = new URLSearchParams()
-
   if (params.page !== undefined) {
     query.set('page', String(params.page))
   }
@@ -77,7 +77,7 @@ export function buildSearchQuery(params: SearchClientSchema): string {
     )
   }
 
-  return query.toString()
+  return query
 }
 
 // Perform the login request, store the token, and return the user info
@@ -114,9 +114,13 @@ export async function registerUser(registration: RegisterInput): Promise<User> {
 
 // Fetch our thoughts
 export async function getThoughts(
-  searchParams: SearchClientSchema
+  searchParams: ThoughtSearchParams
 ): Promise<{ thoughts: ThoughtClient[]; page: SearchPage; links: SearchLinks }> {
-  const query = buildSearchQuery(searchParams)
+  const query = buildSearchQuery(searchParams as SearchClientSchema)
+  if (searchParams.tagId != null && searchParams.tagId.length > 0) {
+    query.set('tagId', searchParams.tagId.join(','))
+  }
+
   const response = await api.get<ThoughtSearchResults>(`/thoughts?${query}`)
   if (response.statusText !== 'OK') {
     throw new Error(`Failed to retrieve thoughts with '${query}': ${response.statusText}`)
