@@ -61,6 +61,7 @@ a:hover {
   flex-wrap: wrap;
   flex-direction: row;
   justify-content: space-between;
+  font-size: smaller;
 }
 
 .form-column {
@@ -79,7 +80,7 @@ a:hover {
 button {
   border-radius: 8px;
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
+  padding: 0.4em 0.8em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
@@ -93,4 +94,17 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* p-form */
+.p-multiselect-header .p-checkbox {
+  display: none;
+}
+
+.form-group textarea,
+.form-group input {
+  border: 1px solid var(--p-multiselect-border-color);
+  border-radius: var(--p-multiselect-border-radius);
+  outline-color: transparent;
+  box-shadow: var(--p-multiselect-shadow);
 }

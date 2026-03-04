@@ -3,7 +3,10 @@ import './style.css'
 import App from './App.vue'
 import { router } from './router'
 import { reportError } from './api'
-import 'flatpickr/dist/flatpickr.css'
+import PrimeVue from 'primevue/config'
+import { DatePicker, MultiSelect, Select } from 'primevue'
+import Aura from '@primeuix/themes/aura'
+import 'primeicons/primeicons.css'
 
 const app = createApp(App)
 app.config.errorHandler = (err, instance, info) => {
@@ -13,4 +16,10 @@ app.config.errorHandler = (err, instance, info) => {
   //  router.push('/error')
 }
 app.use(router)
+
+app.use(PrimeVue, { theme: { preset: Aura } })
+app.component('DatePicker', DatePicker)
+app.component('MultiSelect', MultiSelect)
+app.component('Select', Select)
+
 app.mount('#app')

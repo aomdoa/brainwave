@@ -1,57 +1,52 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import FlatPickr from 'vue-flatpickr-component'
+import { ref, watch, computed } from 'vue'
+import DatePicker from 'primevue/datepicker'
 
 interface Props {
   id?: string
   label?: string
-  modelValue: string | Date | null
+  modelValue: Date | null
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits<{ (e: 'update:modelValue', value: string | Date | null): void }>()
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: Date | null): void
+}>()
 
-// Internal reactive value to bind Flatpickr
-const internalValue = ref(props.modelValue ?? '')
-
-// Config for Flatpickr
-const fpConfig = {
-  enableTime: true,
-  dateFormat: 'Y-m-d H:i', // YYYY-MM-DD HH:mm
-  time_24hr: true,
-}
-
-// Keep v-model in sync
-watch(internalValue, (val) => {
-  emit('update:modelValue', val)
+const internalValue = ref<Date | null>(props.modelValue ?? null)
+const valueProxy = computed<Date | null>({
+  get: () => internalValue.value,
+  set: (val) => {
+    internalValue.value = val
+    emit('update:modelValue', val)
+  },
 })
 
-// Watch prop in case parent updates
 watch(
   () => props.modelValue,
   (val) => {
-    internalValue.value = val ?? ''
+    internalValue.value = val ?? null
   }
 )
 </script>
 
 <template>
-  <div class="form-group">
-    <label :for="id">{{ label }}:</label>
-    <FlatPickr
-      :id="id"
-      v-model="internalValue"
-      :config="fpConfig"
-      class="form-control"
-      placeholder="YYYY-MM-DD HH:MM"
-    />
-  </div>
+  <DatePicker
+    :id="id"
+    ref="calendarRef"
+    v-model="valueProxy"
+    dateFormat="yy-mm-dd"
+    showIcon
+    placeholder="YYYY-MM-DD"
+    class="small-datepicker"
+    updateModelType="string"
+    size="small"
+    closeOnSelection
+  />
 </template>
 
 <style scoped>
-.form-control {
-  width: 100%;
-  padding: 0.5rem;
-  box-sizing: border-box;
+.small-datepicker {
+  width: 15rem;
 }
 </style>

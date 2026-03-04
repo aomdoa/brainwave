@@ -2,39 +2,53 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import dayjs from 'dayjs'
-import { thoughtClientCreateSchema, type ThoughtStatus } from '@brainwave/shared'
-import { deleteThought, getThoughtById, getThoughtConfig, saveThought } from '../api'
+import { deleteThought, getTags, getThoughtById, getThoughtConfig, saveTag, saveThought, saveThoughtTags } from '../api'
 import DateTime from './DateTime.vue'
 import { router } from '../router'
+import { type TagClient, type ThoughtClient, thoughtClientCreateSchema } from '@brainwave/shared'
 
 const route = useRoute()
+/**
+ * TODO: const props = defineProps<{
+ *   availableTags: string[]
+ *   modelValue: string[]   // original tags
+ * }>()
+ * const emit = defineEmits(['update:modelValue'])
+ * const draftTags = ref([...props.modelValue])
+ * const search = ref('')
+ */
+let tags: TagClient[] = []
+let newTagId = -1
+
 const status = ref('loading')
-const form = ref<{
-  title: string
-  body: string
-  status: ThoughtStatus
-  nextReminder: Date | string | null
-}>({
+const thought = ref<ThoughtClient>({
   title: '',
   body: '',
   status: 'ACTIVE',
   nextReminder: null,
-})
-const thoughtInfo = ref<{
-  thoughtId: number | null
-  createdAt: Date | string | null
-  updatedAt: Date | string | null
-  lastFollowUp: Date | string | null
-}>({
-  thoughtId: null,
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  thoughtId: -1,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   lastFollowUp: null,
+  tags: [],
 })
 
+const nextReminder = computed({
+  get: () => {
+    return thought.value.nextReminder ? new Date(thought.value.nextReminder) : null
+  },
+  set: (newValue) => {
+    if (newValue) {
+      // it is a string... I'm right you're wrong
+      thought.value.nextReminder = newValue as unknown as string
+    } else {
+      thought.value.nextReminder = null
+    }
+  },
+})
 const schema = ref<ReturnType<typeof thoughtClientCreateSchema> | null>(null)
 const errors = ref<Record<string, string>>({})
 
@@ -47,8 +61,8 @@ const save = async () => {
     throw new Error('Schema not loaded')
   }
 
-  const reminder = form.value.nextReminder != null ? dayjs(form.value.nextReminder).toISOString() : null
-  const formData = { ...form.value, nextReminder: reminder }
+  const reminder = thought.value.nextReminder != null ? dayjs(thought.value.nextReminder).toISOString() : null
+  const formData = { ...thought.value, nextReminder: reminder }
   const result = schema.value.safeParse(formData)
   if (!result.success) {
     const { fieldErrors } = result.error.flatten((i) => i.message)
@@ -60,35 +74,74 @@ const save = async () => {
     return
   }
 
-  // perform the save
+  // perform the save tags
   status.value = 'saving'
-  let params = { thoughtId: null as number | null, ...result.data }
-  if (thoughtInfo.value.thoughtId != null) {
-    params.thoughtId = thoughtInfo.value.thoughtId
+  const tagsToProcess = thought.value.tags ?? []
+  const tagIds = await Promise.all(
+    tagsToProcess.map(async (tag) => {
+      if (tag.tagId > 0) return tag.tagId
+      const newTag = await saveTag(tag.name)
+      return newTag.tagId
+    })
+  )
+
+  // create/update core thought
+  let params = { thoughtId: thought.value.thoughtId, ...result.data }
+  const coreThought = await saveThought(params)
+
+  // update the tags
+  const updatedThought = await saveThoughtTags(coreThought.thoughtId, tagIds)
+  for (const tag of updatedThought.tags ?? []) {
+    if (!tags.find((t) => t.tagId === tag.tagId)) {
+      tags.push(tag)
+    }
   }
-  const updatedThought = await saveThought(params)
-  form.value = updatedThought
-  thoughtInfo.value = updatedThought
+  tags = sortTags(tags)
+  thought.value = updatedThought
   status.value = 'loaded'
 }
 
 const remove = async () => {
-  if (thoughtInfo.value.thoughtId == null) return
+  if (thought.value.thoughtId == null) return
   if (window.confirm('Are you sure we want to delete the thought?')) {
-    await deleteThought(thoughtInfo.value.thoughtId)
+    await deleteThought(thought.value.thoughtId)
     router.back()
   }
 }
 
+const onEnterNewTag = (event: KeyboardEvent) => {
+  const input = event.target as HTMLInputElement
+  if (input.value.length === 0) return
+  if (tags.find((t) => t.name === input.value)) return
+  addNewTag(input.value)
+  input.value = ''
+}
+
+const addNewTag = async (name: string) => {
+  const tag = { tagId: newTagId, name } as TagClient
+  newTagId--
+  tags.push(tag)
+  if (thought.value.tags == null) thought.value.tags = []
+  thought.value.tags.push(tag)
+  sortTags(thought.value.tags)
+  sortTags(tags)
+  console.log(`add new tag ${tag}`)
+}
+
+const sortTags = (tags: TagClient[]): TagClient[] => {
+  return tags.sort((a, b) => a.name.localeCompare(b.name))
+}
+
 onMounted(async () => {
   try {
+    tags = sortTags(await getTags())
     const config = await getThoughtConfig()
     schema.value = thoughtClientCreateSchema(config)
     if (route.params.thoughtId) {
       const thoughtId = Number(route.params.thoughtId)
-      const thought = await getThoughtById(thoughtId)
-      form.value = thought
-      thoughtInfo.value = thought
+      const thoughtData = await getThoughtById(thoughtId)
+      thought.value = thoughtData
+      thought.value.tags = sortTags(thought.value.tags ?? [])
     }
   } finally {
     status.value = 'loaded'
@@ -103,7 +156,7 @@ onMounted(async () => {
     <form @submit.prevent="save">
       <div class="form-group">
         <label for="title">Title: </label>
-        <input id="title" v-model="form.title" type="text" placeholder="Quick reference title..." />
+        <input id="title" v-model="thought.title" type="text" placeholder="Quick reference title..." />
         <div v-if="errors.title" class="field-error">
           {{ errors.title }}
         </div>
@@ -112,7 +165,7 @@ onMounted(async () => {
         <label for="body">Details: </label>
         <textarea
           id="thought-body"
-          v-model="form.body"
+          v-model="thought.body"
           rows="8"
           placeholder="Write your thought here..."
           class="form-control"
@@ -122,38 +175,66 @@ onMounted(async () => {
         </div>
       </div>
       <div class="form-group">
-        <DateTime id="nextReminder" label="Next Reminder" v-model="form.nextReminder" />
+        <label for="tags">Tags: </label>
+
+        <MultiSelect
+          v-model="thought.tags"
+          :options="tags"
+          optionLabel="name"
+          placeholder="Select tags"
+          display="chip"
+          filter
+          filterPlaceholder="Search tags"
+          :showClear="true"
+          :showSelectAll="false"
+          :checkbox="false"
+        >
+          <template #header>
+            <div class="p-d-flex p-jc-between p-ai-center p-px-2">
+              <span>Add new tag: </span>
+              <input
+                type="text"
+                class="p-inputtext p-mr-2"
+                placeholder="New tag"
+                @keydown.enter.prevent="onEnterNewTag"
+              />
+            </div>
+          </template>
+        </MultiSelect>
+      </div>
+      <div class="form-group">
+        <label for="nextReminder">Next Reminder: </label>
+        <DateTime id="nextReminder" v-model="nextReminder" />
         <div v-if="errors.nextReminder" class="field-error">
           {{ errors.nextReminder }}
+        </div>
+      </div>
+
+      <div class="form-group form-display">
+        <div class="form-column">
+          <label>Created: </label>
+          <span>{{ dayjs(thought.createdAt).format('YYYY-MM-DD HH:mm') }}</span>
+        </div>
+        <div class="form-column">
+          <label>Updated: </label>
+          <span>{{ dayjs(thought.updatedAt).format('YYYY-MM-DD HH:mm') }}</span>
+        </div>
+        <div class="form-column">
+          <label>Last Followed Up: </label>
+          <span>{{ thought.lastFollowUp ? dayjs(thought.lastFollowUp).format('YYYY-MM-DD HH:mm') : 'N/A' }}</span>
+        </div>
+        <div class="form-column">
+          <label>Status: </label><span>{{ thought.status }}</span>
         </div>
       </div>
       <div v-if="errors.server" class="field-error">
         {{ errors.server }}
       </div>
-      <div class="form-group form-display">
-        <div class="form-column">
-          <label>Created: </label>
-          <span>{{ dayjs(thoughtInfo.createdAt).format('YYYY-MM-DD HH:mm') }}</span>
-        </div>
-        <div class="form-column">
-          <label>Updated: </label>
-          <span>{{ dayjs(thoughtInfo.updatedAt).format('YYYY-MM-DD HH:mm') }}</span>
-        </div>
-        <div class="form-column">
-          <label>Last Followed Up: </label>
-          <span>{{
-            thoughtInfo.lastFollowUp ? dayjs(thoughtInfo.lastFollowUp).format('YYYY-MM-DD HH:mm') : 'N/A'
-          }}</span>
-        </div>
-        <div class="form-column">
-          <label>Status: </label><span>{{ form.status }}</span>
-        </div>
-      </div>
       <div class="form-group actions">
         <button type="button" @click="goBack">Back</button>
         <div style="margin-left: auto">
-          <button v-if="thoughtInfo.thoughtId != null" type="button" @click="remove">Delete</button>
-          <button style="margin-left: 1em" type="submit">{{ thoughtInfo.thoughtId ? 'Update' : 'Create' }}</button>
+          <button v-if="thought.thoughtId != null" type="button" @click="remove">Delete</button>
+          <button style="margin-left: 1em" type="submit">{{ thought.thoughtId ? 'Update' : 'Create' }}</button>
         </div>
       </div>
     </form>

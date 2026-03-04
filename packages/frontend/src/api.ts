@@ -10,10 +10,12 @@ import type {
   SearchClientSchema,
   SearchLinks,
   SearchPage,
+  TagClient,
   ThoughtClient,
   ThoughtClientCreate,
   ThoughtClientUpdate,
   ThoughtConfig,
+  ThoughtSearchParams,
   ThoughtSearchResults,
 } from '@brainwave/shared'
 
@@ -47,9 +49,8 @@ api.interceptors.response.use(
 )
 
 // Build the search
-export function buildSearchQuery(params: SearchClientSchema): string {
+export function buildSearchQuery(params: SearchClientSchema): URLSearchParams {
   const query = new URLSearchParams()
-
   if (params.page !== undefined) {
     query.set('page', String(params.page))
   }
@@ -76,7 +77,7 @@ export function buildSearchQuery(params: SearchClientSchema): string {
     )
   }
 
-  return query.toString()
+  return query
 }
 
 // Perform the login request, store the token, and return the user info
@@ -106,16 +107,20 @@ export async function getAuthConfig(): Promise<RegisterConfig> {
 export async function registerUser(registration: RegisterInput): Promise<User> {
   const response = await api.post('/auth/register', registration)
   if (response.statusText !== 'OK') {
-    throw new Error(`Failed to register user: ${response.statusText}`)
+    throw new Error(`Failed to register user: ${response.data}`)
   }
   return response.data as User
 }
 
 // Fetch our thoughts
 export async function getThoughts(
-  searchParams: SearchClientSchema
+  searchParams: ThoughtSearchParams
 ): Promise<{ thoughts: ThoughtClient[]; page: SearchPage; links: SearchLinks }> {
-  const query = buildSearchQuery(searchParams)
+  const query = buildSearchQuery(searchParams as SearchClientSchema)
+  if (searchParams.tagId != null && searchParams.tagId.length > 0) {
+    query.set('tagId', searchParams.tagId.join(','))
+  }
+
   const response = await api.get<ThoughtSearchResults>(`/thoughts?${query}`)
   if (response.statusText !== 'OK') {
     throw new Error(`Failed to retrieve thoughts with '${query}': ${response.statusText}`)
@@ -130,7 +135,7 @@ export async function getThoughts(
 export async function getThoughtById(thoughtId: number): Promise<ThoughtClient> {
   const response = await api.get<ThoughtClient>(`thoughts/${thoughtId}`)
   if (response.statusText !== 'OK') {
-    throw new Error(`Failed to retrieve thought ${thoughtId}: ${response.statusText}`)
+    throw new Error(`Failed to retrieve thought ${thoughtId}: ${response.data}`)
   }
   return response.data
 }
@@ -144,7 +149,7 @@ export async function saveThought(thought: ThoughtClientCreate | ThoughtClientUp
     response = await api.post<ThoughtClient>('thoughts/', thought as ThoughtClientCreate)
   }
   if (response.statusText !== 'OK') {
-    throw new Error(`Failed saving thought: ${response.statusText}`)
+    throw new Error(`Failed saving thought: ${response.data}`)
   }
   return response.data
 }
@@ -152,14 +157,35 @@ export async function saveThought(thought: ThoughtClientCreate | ThoughtClientUp
 export async function deleteThought(thoughtId: number): Promise<ThoughtClient> {
   const response = await api.delete<ThoughtClient>(`thoughts/${thoughtId}`)
   if (response.statusText !== 'OK') {
-    throw new Error(`Failed to remove thought ${thoughtId}: ${response.statusText}`)
+    throw new Error(`Failed to remove thought ${thoughtId}: ${response.data}`)
   }
   return response.data
 }
 
 export async function getThoughtConfig(): Promise<ThoughtConfig> {
-  const response = await api.get('/thoughts/config')
-  return response.data as ThoughtConfig
+  const response = await api.get<ThoughtConfig>('/thoughts/config')
+  return response.data
+}
+
+export async function getTags(): Promise<TagClient[]> {
+  const response = await api.get<TagClient[]>('/tags')
+  return response.data
+}
+
+export async function saveTag(name: string): Promise<TagClient> {
+  const response = await api.post<TagClient>('/tags', { name })
+  if (response.statusText !== 'OK') {
+    throw new Error(`Failed to create tag with anem ${name}: ${response.data}`)
+  }
+  return response.data
+}
+
+export async function saveThoughtTags(thoughtId: number, tagIds: number[]): Promise<ThoughtClient> {
+  const response = await api.post<ThoughtClient>(`/thoughts/${thoughtId}/tags`, tagIds)
+  if (response.statusText !== 'OK') {
+    throw new Error(`Failed to allocated tags ${tagIds} to thought ${thoughtId}: ${response.data}`)
+  }
+  return response.data
 }
 
 // Report error
