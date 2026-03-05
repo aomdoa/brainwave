@@ -18,13 +18,7 @@ import type {
   ThoughtSearchParams,
   ThoughtSearchResults,
 } from '@brainwave/shared'
-
-export interface User {
-  id: number
-  name: string
-  email: string
-  createdAt?: string
-}
+import type { User } from './store/user.store'
 
 const api = axios.create({ baseURL: config.VITE_API_URL })
 
