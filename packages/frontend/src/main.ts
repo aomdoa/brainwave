@@ -10,10 +10,12 @@ import 'primeicons/primeicons.css'
 
 const app = createApp(App)
 app.config.errorHandler = (err, instance, info) => {
-  const error = err as Error
-  console.log(JSON.stringify(error))
-  reportError(error, instance, info)
-  //  router.push('/error')
+  if (err) {
+    const error = err as Error
+    console.log(JSON.stringify(error))
+    reportError(error, instance, info)
+    router.push('/error')
+  }
 }
 
 app.use(PrimeVue, { theme: { preset: Aura } })

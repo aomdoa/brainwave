@@ -10,7 +10,9 @@ import { registerAuthRoutes } from './routes/auth.route'
 import { registerHealthRoutes } from './routes/health.route'
 import { registerThoughtRoutes } from './routes/thought.route'
 import { registerTagRoutes } from './routes/tag.route'
+import { registerThoughtTagRoutes } from './routes/thoughtTag.route'
 import { setupSwagger } from './utils/swagger'
+import { registerThoughtRelationRoutes } from './routes/thoughtRelation.route'
 
 const serviceLog = logger.child({ file: 'express.ts' })
 
@@ -57,6 +59,8 @@ export function initialize(): Express {
   // Register routes
   app.use('/auth', registerAuthRoutes())
   app.use('/thoughts', registerThoughtRoutes())
+  app.use('/thoughts', registerThoughtTagRoutes())
+  app.use('/thoughts', registerThoughtRelationRoutes())
   app.use('/tags', registerTagRoutes())
   app.use('/health', registerHealthRoutes())
 

@@ -4,15 +4,12 @@
 import { Router } from 'express'
 import { authMiddleware, AuthRequest, buildPageLink } from '../utils/express'
 import {
-  addThoughtTag,
   createThought,
   deleteThought,
   getThought,
-  remThoughtTag,
   searchThoughts,
   touchThought,
   updateThought,
-  updateThoughtTags,
 } from '../services/thought.service'
 import {
   ThoughtClient,
@@ -119,64 +116,6 @@ export function registerThoughtRoutes(): Router {
       }
 
       return res.json({ data: data.map(publicThought), page, links })
-    } catch (err) {
-      return next(err)
-    }
-  })
-
-  // thoughts with tags
-  router.get('/:id/tags', authMiddleware, authMiddleware, async (req: AuthRequest, res, next) => {
-    try {
-      const thoughtId = Number(req.params.id)
-      const thought = (await getThought(thoughtId, req.userId ?? 0)) as Thought & { tags?: Tag[] }
-      if (!thought.tags) {
-        return res.json([])
-      } else {
-        return res.json(thought.tags.map(publicTag))
-      }
-    } catch (err) {
-      return next(err)
-    }
-  })
-
-  router.post('/:id/tags', authMiddleware, authMiddleware, async (req: AuthRequest, res, next) => {
-    try {
-      const thoughtId = Number(req.params.id)
-      const tagIds = req.body as number[]
-      const thought = await updateThoughtTags(thoughtId, tagIds, req.userId ?? 0)
-      return res.json(publicThought(thought))
-    } catch (err) {
-      return next(err)
-    }
-  })
-
-  router.put('/:id/tags/:tagId', authMiddleware, authMiddleware, async (req: AuthRequest, res, next) => {
-    try {
-      const thoughtId = Number(req.params.id)
-      const tagId = Number(req.params.tagId)
-      const thought = await addThoughtTag(thoughtId, tagId, req.userId ?? 0)
-      return res.json(publicThought(thought))
-    } catch (err) {
-      return next(err)
-    }
-  })
-
-  router.delete('/:id/tags', authMiddleware, authMiddleware, async (req: AuthRequest, res, next) => {
-    try {
-      const thoughtId = Number(req.params.id)
-      const thought = await updateThoughtTags(thoughtId, [], req.userId ?? 0)
-      return res.json(publicThought(thought))
-    } catch (err) {
-      return next(err)
-    }
-  })
-
-  router.delete('/:id/tags/:tagId', authMiddleware, authMiddleware, async (req: AuthRequest, res, next) => {
-    try {
-      const thoughtId = Number(req.params.id)
-      const tagId = Number(req.params.tagId)
-      const thought = await remThoughtTag(thoughtId, tagId, req.userId ?? 0)
-      return res.json(publicThought(thought))
     } catch (err) {
       return next(err)
     }
