@@ -4,7 +4,7 @@
  */
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { login as apiLogin } from '../api'
+import { login as apiLogin } from '../store/user.store'
 
 const router = useRouter()
 const email = ref('')
