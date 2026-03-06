@@ -86,7 +86,7 @@ const save = async () => {
   )
 
   // create/update core thought
-  let params = { thoughtId: thought.value.thoughtId, ...result.data }
+  let params = { thoughtId: thought.value.thoughtId > 0 ? thought.value.thoughtId : undefined, ...result.data }
   const coreThought = await saveThought(params)
 
   // update the tags
@@ -125,7 +125,6 @@ const addNewTag = async (name: string) => {
   thought.value.tags.push(tag)
   sortTags(thought.value.tags)
   sortTags(tags)
-  console.log(`add new tag ${tag}`)
 }
 
 const sortTags = (tags: TagClient[]): TagClient[] => {
@@ -234,7 +233,7 @@ onMounted(async () => {
         <button type="button" @click="goBack">Back</button>
         <div style="margin-left: auto">
           <button v-if="thought.thoughtId != null" type="button" @click="remove">Delete</button>
-          <button style="margin-left: 1em" type="submit">{{ thought.thoughtId ? 'Update' : 'Create' }}</button>
+          <button style="margin-left: 1em" type="submit">{{ thought.thoughtId > 0 ? 'Update' : 'Create' }}</button>
         </div>
       </div>
     </form>

@@ -77,7 +77,6 @@ const selectTag = () => {
 }
 
 const fetchThoughts = async () => {
-  console.log(`tag value is ${tag.value?.tagId}`)
   const { thoughts: fetchedThoughts, page } = await getThoughts({
     orderBy: {
       field: pagination.orderBy,
