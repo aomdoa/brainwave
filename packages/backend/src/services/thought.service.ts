@@ -133,10 +133,13 @@ export async function searchThoughts(
   const search = buildPrismaWhere(parsed.data.filter as SearchFilter[], ['title', 'body'], parsed.data.search)
   const tagIds = parsed.data.tagId ? { tags: { some: { tagId: { in: parsed.data.tagId } } } } : {}
   const where = { userId, ...tagIds, ...search }
+  const orderBy: { [key: string]: 'asc' | 'desc' } = parsed.data.orderBy
+    ? { [parsed.data.orderBy.field]: parsed.data.orderBy.direction }
+    : { ['createdAt']: 'desc' }
 
   const params = {
     where,
-    orderBy: { [parsed.data.orderBy.field]: parsed.data.orderBy.direction },
+    orderBy,
     skip: (parsed.data.page - 1) * parsed.data.size,
     take: parsed.data.size,
   }

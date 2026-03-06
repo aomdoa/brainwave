@@ -2,7 +2,7 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 
-import { ThoughtRelationType } from '@brainwave/shared'
+import { ThoughtSimplifiedRelation } from '@brainwave/shared'
 import logger from '../utils/logger'
 import { RelationType, Thought } from '@prisma/client'
 import { prisma } from '../utils/prisma'
@@ -10,14 +10,9 @@ import { ValidationError } from '../utils/error'
 
 const serviceLog = logger.child({ file: 'relation.service.ts' })
 
-export type ThoughtRelation = {
-  thoughtRelationId: number
-  relationType: ThoughtRelationType
-  createdAt: string
-  thought: Thought
-}
+export type ServerThoughtRelation = ThoughtSimplifiedRelation & { thought: Thought }
 
-export async function getThoughtRelations(thoughtId: number, userId: number): Promise<ThoughtRelation[]> {
+export async function getThoughtRelations(thoughtId: number, userId: number): Promise<ThoughtSimplifiedRelation[]> {
   const thought = await prisma.thought.findUnique({ where: { thoughtId, userId }, select: { thoughtId: true } })
   if (!thought) {
     throw new ValidationError('Invalid input')
@@ -35,8 +30,8 @@ export async function getThoughtRelations(thoughtId: number, userId: number): Pr
       thoughtRelationId: r.thoughtRelationId,
       relationType: r.relationType,
       createdAt: r.createdAt.toISOString(),
-      thought,
-    } as ThoughtRelation
+      thought: thought,
+    } as ServerThoughtRelation
   })
   serviceLog.debug(`getThoughtRelations found ${results.length} relationships for ${thoughtId}`)
   return results
@@ -46,7 +41,7 @@ export async function addThoughtRelations(
   thoughtId: number,
   relatedIds: number[],
   userId: number
-): Promise<ThoughtRelation[]> {
+): Promise<ThoughtSimplifiedRelation[]> {
   // get the existing relations (if any) and the valid ids (should be all)
   const existingRelations = await prisma.thoughtRelation.findMany({
     where: {
@@ -90,7 +85,7 @@ export async function remThoughtRelations(
   thoughtId: number,
   relatedIds: number[],
   userId: number
-): Promise<ThoughtRelation[]> {
+): Promise<ThoughtSimplifiedRelation[]> {
   const thought = await prisma.thought.findUnique({ where: { thoughtId, userId }, select: { thoughtId: true } })
   if (!thought) {
     throw new ValidationError('Invalid input')
@@ -114,7 +109,7 @@ export async function setThoughtRelations(
   thoughtId: number,
   relatedIds: number[],
   userId: number
-): Promise<ThoughtRelation[]> {
+): Promise<ThoughtSimplifiedRelation[]> {
   const thought = await prisma.thought.findUnique({ where: { thoughtId, userId }, select: { thoughtId: true } })
   if (!thought) {
     throw new ValidationError('Invalid input')
