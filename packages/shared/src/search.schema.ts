@@ -64,16 +64,16 @@ export type SearchClientSchema = z.infer<typeof searchClientSchema>
 // search request only the backend should use this - includes parsing of the data
 export const searchSchema = (
   config: SearchResultConfig,
-  filters: string[],
-  orders: string[],
+  filters: string[] = [],
+  orders: string[] = [],
   defaultOrder = 'updatedAt'
 ) =>
   z.object({
     page: z.coerce.number().int().min(1).default(1),
     size: z.coerce.number().int().min(1).max(config.pageSizeMaximum).default(config.pageSizeDefault),
-    orderBy: orderBySchema(orders, defaultOrder),
+    orderBy: orderBySchema(orders, defaultOrder).optional(),
     search: z.string().trim().min(1).optional(),
-    filter: filterSchema(filters),
+    filter: filterSchema(filters).optional(),
   })
 
 export const orderBySchema = (orders: string[], defaultOrder = 'updatedAt') =>

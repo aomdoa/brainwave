@@ -17,6 +17,7 @@ import type {
   ThoughtConfig,
   ThoughtSearchParams,
   ThoughtSearchResults,
+  ThoughtSimplifiedRelation,
 } from '@brainwave/shared'
 import type { User } from './store/user.store'
 
@@ -178,6 +179,25 @@ export async function saveThoughtTags(thoughtId: number, tagIds: number[]): Prom
   const response = await api.post<ThoughtClient>(`/thoughts/${thoughtId}/tags`, tagIds)
   if (response.statusText !== 'OK') {
     throw new Error(`Failed to allocated tags ${tagIds} to thought ${thoughtId}: ${response.data}`)
+  }
+  return response.data
+}
+
+export async function getThoughtRelations(thoughtId: number): Promise<ThoughtSimplifiedRelation[]> {
+  const response = await api.get<ThoughtSimplifiedRelation[]>(`thoughts/${thoughtId}/relations`)
+  if (response.statusText !== 'OK') {
+    throw new Error(`Failed to get the relations for ${thoughtId}: ${response.data}`)
+  }
+  return response.data
+}
+
+export async function saveThoughtRelations(
+  thoughtId: number,
+  relatedThoughtIds: number[]
+): Promise<ThoughtSimplifiedRelation[]> {
+  const response = await api.post<ThoughtSimplifiedRelation[]>(`thoughts/${thoughtId}/relations`, relatedThoughtIds)
+  if (response.statusText !== 'OK') {
+    throw new Error(`Failed to set the relations for ${thoughtId}: ${response.data}`)
   }
   return response.data
 }

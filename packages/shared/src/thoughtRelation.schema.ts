@@ -2,6 +2,7 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { z } from 'zod'
+import { ThoughtClient, ThoughtServer } from './thought.schema'
 
 const relationType = ['RELATED', 'CAUSES', 'CONTRADICTS', 'SUPPORTS', 'DERIVES_FROM'] as const
 export type ThoughtRelationType = (typeof relationType)[number]
@@ -33,3 +34,11 @@ export const thoughtRelationServerCreateSchema = thoughtRelationBaseCreateSchema
 export const thoughtRelationClientCreateSchema = thoughtRelationBaseCreateSchema
 export type ThoughtRelationServerCreate = z.infer<typeof thoughtRelationServerCreateSchema>
 export type ThoughtRelationClientCreate = z.infer<typeof thoughtRelationClientCreateSchema>
+
+// simplified relation
+export type ThoughtSimplifiedRelation = {
+  thoughtRelationId: number
+  relationType: ThoughtRelationType
+  createdAt: string
+  thought: ThoughtClient | ThoughtServer
+}

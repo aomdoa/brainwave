@@ -22,14 +22,20 @@ import config from '../utils/config'
 import { Tag, Thought } from '@prisma/client'
 import { publicTag } from './tag.route'
 
-export const publicThought = (thought: Thought & { tags?: Tag[] }): ThoughtClient => {
+export const publicThought = (thought: (Thought & { tags?: Tag[] }) | ThoughtClient): ThoughtClient => {
+  const result = thoughtClientSchema.safeParse(thought)
+  if (result.success) {
+    return result.data
+  }
+
+  const typedThought = thought as Thought & { tags?: Tag[] }
   return thoughtClientSchema.parse({
-    ...thought,
-    createdAt: thought.createdAt.toISOString(),
-    updatedAt: thought.updatedAt.toISOString(),
-    lastFollowUp: thought.lastFollowUp != null ? thought.lastFollowUp.toISOString() : null,
-    nextReminder: thought.nextReminder != null ? thought.nextReminder.toISOString() : null,
-    tags: thought.tags ? thought.tags.map(publicTag) : undefined,
+    ...typedThought,
+    createdAt: typedThought.createdAt.toISOString(),
+    updatedAt: typedThought.updatedAt.toISOString(),
+    lastFollowUp: typedThought.lastFollowUp != null ? typedThought.lastFollowUp.toISOString() : null,
+    nextReminder: typedThought.nextReminder != null ? typedThought.nextReminder.toISOString() : null,
+    tags: typedThought.tags ? typedThought.tags.map(publicTag) : undefined,
   })
 }
 

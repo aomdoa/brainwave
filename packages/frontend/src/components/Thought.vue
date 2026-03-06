@@ -2,24 +2,28 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import dayjs from 'dayjs'
-import { deleteThought, getTags, getThoughtById, getThoughtConfig, saveTag, saveThought, saveThoughtTags } from '../api'
+import {
+  deleteThought,
+  getTags,
+  getThoughtById,
+  getThoughtConfig,
+  getThoughtRelations,
+  getThoughts,
+  saveTag,
+  saveThought,
+  saveThoughtRelations,
+  saveThoughtTags,
+} from '../api'
 import DateTime from './DateTime.vue'
 import { router } from '../router'
 import { type TagClient, type ThoughtClient, thoughtClientCreateSchema } from '@brainwave/shared'
 
 const route = useRoute()
-/**
- * TODO: const props = defineProps<{
- *   availableTags: string[]
- *   modelValue: string[]   // original tags
- * }>()
- * const emit = defineEmits(['update:modelValue'])
- * const draftTags = ref([...props.modelValue])
- * const search = ref('')
- */
+
+// refs
 let tags: TagClient[] = []
 let newTagId = -1
 
@@ -35,22 +39,22 @@ const thought = ref<ThoughtClient>({
   lastFollowUp: null,
   tags: [],
 })
+const thoughtRelations = ref<ThoughtClient[]>([])
+const thoughtSuggestions = ref<ThoughtClient[]>([])
 
-const nextReminder = computed({
-  get: () => {
-    return thought.value.nextReminder ? new Date(thought.value.nextReminder) : null
-  },
-  set: (newValue) => {
-    if (newValue) {
-      // it is a string... I'm right you're wrong
-      thought.value.nextReminder = newValue as unknown as string
-    } else {
-      thought.value.nextReminder = null
-    }
-  },
-})
 const schema = ref<ReturnType<typeof thoughtClientCreateSchema> | null>(null)
 const errors = ref<Record<string, string>>({})
+
+// functions
+const thoughtId = ref(Number(route.params.thoughtId))
+
+watch(
+  () => route.params.thoughtId,
+  (newId) => {
+    thoughtId.value = Number(newId)
+    fetchThought(Number(newId)) // re-fetch the thought
+  }
+)
 
 const goBack = router.back
 
@@ -97,6 +101,13 @@ const save = async () => {
     }
   }
   tags = sortTags(tags)
+
+  // update the linked
+  await saveThoughtRelations(
+    updatedThought.thoughtId,
+    thoughtRelations.value.map((r) => r.thoughtId)
+  )
+
   thought.value = updatedThought
   status.value = 'loaded'
 }
@@ -131,20 +142,53 @@ const sortTags = (tags: TagClient[]): TagClient[] => {
   return tags.sort((a, b) => a.name.localeCompare(b.name))
 }
 
-onMounted(async () => {
+async function searchThoughts(event: any) {
+  const query = event.query?.trim()
+
+  if (!query || query.length < 3) {
+    thoughtSuggestions.value = []
+    return
+  }
+
+  const { thoughts } = await getThoughts({ search: query, page: 1, size: 50 })
+  thoughtSuggestions.value = thoughts.filter((t) => t.thoughtId !== thought.value.thoughtId)
+}
+
+const nextReminder = computed({
+  get: () => {
+    return thought.value.nextReminder ? new Date(thought.value.nextReminder) : null
+  },
+  set: (newValue) => {
+    if (newValue) {
+      // it is a string... I'm right you're wrong
+      thought.value.nextReminder = newValue as unknown as string
+    } else {
+      thought.value.nextReminder = null
+    }
+  },
+})
+
+const fetchThought = async (thoughtId: number) => {
   try {
     tags = sortTags(await getTags())
     const config = await getThoughtConfig()
     schema.value = thoughtClientCreateSchema(config)
-    if (route.params.thoughtId) {
-      const thoughtId = Number(route.params.thoughtId)
+    if (thoughtId > 0) {
       const thoughtData = await getThoughtById(thoughtId)
       thought.value = thoughtData
       thought.value.tags = sortTags(thought.value.tags ?? [])
+      const relations = await getThoughtRelations(thoughtId)
+      thoughtRelations.value = relations.map((r) => r.thought)
+      console.log(JSON.stringify(thoughtRelations.value))
+      console.dir(thoughtRelations.value)
     }
   } finally {
     status.value = 'loaded'
   }
+}
+onMounted(async () => {
+  const thoughtId = Number(route.params.thoughtId ?? 0)
+  fetchThought(thoughtId)
 })
 </script>
 
@@ -202,6 +246,38 @@ onMounted(async () => {
         </MultiSelect>
       </div>
       <div class="form-group">
+        <label for="relations">Related Thoughts:</label>
+
+        <AutoComplete
+          v-model="thoughtRelations"
+          multiple
+          optionLabel="title"
+          dataKey="thoughtId"
+          :suggestions="thoughtSuggestions"
+          placeholder="Search thoughts"
+          @complete="searchThoughts"
+          :minLength="3"
+        >
+          <template #chip="slotProps">
+            <span class="p-chip-text p-d-flex p-ai-center">
+              <!-- Clickable text -->
+              <router-link :to="`/thoughts/${slotProps.value.thoughtId}`" class="chip-link p-mr-2">
+                {{ slotProps.value.title }}
+              </router-link>
+
+              <!-- Manual Remove Button -->
+              <button
+                type="button"
+                class="p-chip-remove p-button p-button-text p-button-sm"
+                @click="slotProps.removeCallback"
+              >
+                ✕
+              </button>
+            </span>
+          </template>
+        </AutoComplete>
+      </div>
+      <div class="form-group">
         <label for="nextReminder">Next Reminder: </label>
         <DateTime id="nextReminder" v-model="nextReminder" />
         <div v-if="errors.nextReminder" class="field-error">
@@ -240,4 +316,14 @@ onMounted(async () => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.chip-link {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.chip-link:hover {
+  text-decoration: underline;
+}
+</style>

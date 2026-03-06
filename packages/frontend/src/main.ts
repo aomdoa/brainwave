@@ -4,7 +4,7 @@ import App from './App.vue'
 import { router } from './router'
 import { reportError } from './api'
 import PrimeVue from 'primevue/config'
-import { DatePicker, MultiSelect, Select, Button } from 'primevue'
+import { DatePicker, MultiSelect, Select, AutoComplete } from 'primevue'
 import Aura from '@primeuix/themes/aura'
 import 'primeicons/primeicons.css'
 
@@ -22,7 +22,7 @@ app.use(PrimeVue, { theme: { preset: Aura } })
 app.component('DatePicker', DatePicker)
 app.component('MultiSelect', MultiSelect)
 app.component('Select', Select)
-app.component('Button', Button)
+app.component('AutoComplete', AutoComplete)
 
 app.use(router)
 
