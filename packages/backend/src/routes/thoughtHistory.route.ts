@@ -9,7 +9,6 @@ import { ThoughtBodyHistory } from '@prisma/client'
 import { ThoughtHistoryClient, thoughtHistoryClientSchema } from '@brainwave/shared'
 
 export const publicHistory = (history: ThoughtBodyHistory): ThoughtHistoryClient => {
-  console.dir(history)
   return thoughtHistoryClientSchema.parse({
     ...history,
     createdAt: history.createdAt.toISOString(),
