@@ -19,7 +19,6 @@ model User {
   // Relations
   thoughts      Thought[]      @relation("ThoughtToUser")
   tags          Tag[]          @relation("UserToTag")
-  thoughtGroups ThoughtGroup[] @relation("UserToThoughtGroup")
 }
 
 model Thought {
@@ -44,10 +43,19 @@ model Thought {
   thoughtRelationsOne ThoughtRelation[] @relation("RelationThoughtOne")
   thoughtRelationsTwo ThoughtRelation[] @relation("RelationThoughtTwo")
 
-  // Group association
-  thoughtGroups ThoughtGroup[] @relation("ThoughtToThoughtGroup")
+  // History
+  bodyHistories ThoughtBodyHistory[] @relation("ThoughtToThoughtBodyHistory")
 
   @@index([userId])
+}
+
+model ThoughtBodyHistory {
+  thoughtBodyHistoryId  Int       @id @default(autoincrement())
+  thoughtId             Int
+  createdAt             DateTime  @default(now())
+  body                  String
+  thought               Thought   @relation("ThoughtToThoughtBodyHistory", fields: [thoughtId], references: [thoughtId], onDelete: Cascade)
+  @@index([thoughtId])
 }
 
 model Tag {
@@ -68,6 +76,7 @@ model Tag {
   @@unique([userId, name])
   @@index([userId])
 }
+
 model ThoughtRelation {
   thoughtRelationId Int          @id @default(autoincrement())
   relationType      RelationType @default(RELATED)
@@ -84,24 +93,6 @@ model ThoughtRelation {
   @@unique([thoughtOneId, thoughtTwoId])
   @@index([thoughtOneId])
   @@index([thoughtTwoId])
-}
-
-model ThoughtGroup {
-  thoughtGroupId Int    @id @default(autoincrement())
-  name           String
-  notes          String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Ownership
-  userId Int
-  user   User @relation("UserToThoughtGroup", fields: [userId], references: [userId], onDelete: Cascade)
-
-  // Relations
-  thoughts Thought[] @relation("ThoughtToThoughtGroup")
-
-  @@index([userId])
 }
 
 enum Status {
