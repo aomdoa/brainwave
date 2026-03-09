@@ -10,6 +10,7 @@ import {
   getTags,
   getThoughtById,
   getThoughtConfig,
+  getThoughtHistory,
   getThoughtRelations,
   getThoughts,
   saveTag,
@@ -19,7 +20,12 @@ import {
 } from '../api'
 import DateTime from './DateTime.vue'
 import { router } from '../router'
-import { type TagClient, type ThoughtClient, thoughtClientCreateSchema } from '@brainwave/shared'
+import {
+  type TagClient,
+  type ThoughtClient,
+  thoughtClientCreateSchema,
+  type ThoughtHistoryClient,
+} from '@brainwave/shared'
 
 const route = useRoute()
 
@@ -41,7 +47,8 @@ const thought = ref<ThoughtClient>({
 })
 const thoughtRelations = ref<ThoughtClient[]>([])
 const thoughtSuggestions = ref<ThoughtClient[]>([])
-
+const thoughtHistory = ref<ThoughtHistoryClient[]>([])
+const showHistory = ref(false)
 const schema = ref<ReturnType<typeof thoughtClientCreateSchema> | null>(null)
 const errors = ref<Record<string, string>>({})
 
@@ -109,6 +116,7 @@ const save = async () => {
   )
 
   thought.value = updatedThought
+  thoughtHistory.value = await getThoughtHistory(thought.value.thoughtId)
   status.value = 'loaded'
 }
 
@@ -179,8 +187,7 @@ const fetchThought = async (thoughtId: number) => {
       thought.value.tags = sortTags(thought.value.tags ?? [])
       const relations = await getThoughtRelations(thoughtId)
       thoughtRelations.value = relations.map((r) => r.thought)
-      console.log(JSON.stringify(thoughtRelations.value))
-      console.dir(thoughtRelations.value)
+      thoughtHistory.value = await getThoughtHistory(thoughtId)
     }
   } finally {
     status.value = 'loaded'
@@ -205,7 +212,18 @@ onMounted(async () => {
         </div>
       </div>
       <div class="form-group">
-        <label for="body">Details: </label>
+        <div style="display: flex; align-items: center">
+          <label for="body">Details: </label>
+          <Button
+            v-if="thoughtHistory.length > 0"
+            type="button"
+            label="History"
+            style="margin-left: auto; font-size: smaller"
+            @click="showHistory = true"
+          >
+            History
+          </Button>
+        </div>
         <textarea
           id="thought-body"
           v-model="thought.body"
@@ -314,6 +332,14 @@ onMounted(async () => {
       </div>
     </form>
   </div>
+  <Dialog v-model:visible="showHistory" modal maximizable header="Thought History" :style="{ width: '50vw' }">
+    <div class="history-container">
+      <div v-for="history in thoughtHistory" :key="history.thoughtBodyHistoryId" class="history-item">
+        <div class="history-date">{{ dayjs(history.createdAt).format('YYYY-MM-DD HH:mm') }}</div>
+        <pre class="history-body">{{ history.body }}</pre>
+      </div>
+    </div>
+  </Dialog>
 </template>
 
 <style scoped>
@@ -325,5 +351,10 @@ onMounted(async () => {
 
 .chip-link:hover {
   text-decoration: underline;
+}
+
+.history-item {
+  border-top: 1px solid black;
+  margin-top: 1rem;
 }
 </style>

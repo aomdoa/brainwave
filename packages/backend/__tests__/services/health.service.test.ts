@@ -6,12 +6,12 @@ import { checkLive, checkReady, logClientError } from '../../src/services/health
 import logger from '../../src/utils/logger'
 
 describe('health.service', () => {
-  test('checkLive', () => {
+  it('checkLive', () => {
     const result = checkLive()
     expect(result).toStrictEqual({ status: 'ok' })
   })
 
-  test('checkReady', () => {
+  it('checkReady', () => {
     const statusSchema = z.object({
       status: z.literal('ok'), // exact value
       buildInfo: z.object({
@@ -29,7 +29,7 @@ describe('health.service', () => {
     expect(() => statusSchema.parse(ready)).not.toThrow()
   })
 
-  test('logClientError', () => {
+  it('logClientError', () => {
     jest.spyOn(logger, 'warn').mockImplementation(() => {})
     const error = {
       stack: 'stack',

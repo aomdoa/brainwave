@@ -15,6 +15,7 @@ import type {
   ThoughtClientCreate,
   ThoughtClientUpdate,
   ThoughtConfig,
+  ThoughtHistoryClient,
   ThoughtSearchParams,
   ThoughtSearchResults,
   ThoughtSimplifiedRelation,
@@ -198,6 +199,14 @@ export async function saveThoughtRelations(
   const response = await api.post<ThoughtSimplifiedRelation[]>(`thoughts/${thoughtId}/relations`, relatedThoughtIds)
   if (response.statusText !== 'OK') {
     throw new Error(`Failed to set the relations for ${thoughtId}: ${response.data}`)
+  }
+  return response.data
+}
+
+export async function getThoughtHistory(thoughtId: number): Promise<ThoughtHistoryClient[]> {
+  const response = await api.get<ThoughtHistoryClient[]>(`thoughts/${thoughtId}/history`)
+  if (response.statusText !== 'OK') {
+    throw new Error(`Filed to get thought history for ${thoughtId}: ${response.data}`)
   }
   return response.data
 }

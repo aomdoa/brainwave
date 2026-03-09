@@ -17,6 +17,7 @@ import { NotFoundError, ValidationError } from '../utils/error'
 import { buildPrismaWhere, prisma } from '../utils/prisma'
 import logger from '../utils/logger'
 import { getTag, getTagsByIds } from './tag.service'
+import { createHistory } from './history.service'
 
 const serviceLog = logger.child({ file: 'thought.service.ts' })
 
@@ -28,6 +29,7 @@ function getSchemaConfig() {
     maxBodyLength: config.BODY_MAX_LENGTH,
   }
 }
+
 export async function createThought(data: ThoughtServerCreate): Promise<Thought> {
   const schema = thoughtServerCreateSchema(getSchemaConfig())
   const parsed = schema.safeParse(data)
@@ -56,6 +58,14 @@ export async function updateThought(data: ThoughtServerUpdate): Promise<Thought>
     throw new ValidationError('Invalid input', parsed.error)
   }
   const { thoughtId, userId, ...updateData } = { ...parsed.data, updatedAt: new Date() }
+  if (updateData.body) {
+    // if we're given a body then probably a history is needed
+    const oldThought = await getThought(thoughtId, userId)
+    if (oldThought.body !== updateData.body) {
+      // only make a history if there is a change
+      createHistory(oldThought.thoughtId, oldThought.body)
+    }
+  }
   const thought = await prisma.thought.update({ where: { thoughtId, userId }, data: updateData })
   serviceLog.debug(`updatedThought: ${JSON.stringify(thought)}`)
   return thought
