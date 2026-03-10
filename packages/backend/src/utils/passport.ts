@@ -15,14 +15,13 @@ passport.use(
     {
       clientID: config.GOOGLE_CLIENT_ID,
       clientSecret: config.GOOGLE_CLIENT_SECRET,
-      callbackURL: '/auth/google/callback',
+      callbackURL: config.GOOGLE_CALLBACK_URL,
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {
         const googleId = profile.id
         const email = profile.emails?.[0]?.value
         const name = profile.displayName
-        console.dir(profile)
 
         if (!email) {
           serviceLog.warn(`Received invalid email for googled id ${googleId}`)

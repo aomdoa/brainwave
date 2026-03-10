@@ -27,6 +27,7 @@ const schema = z.object({
   DOCS_BASE: z.string().default('/'),
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
+  GOOGLE_CALLBACK_URL: z.string().default('http://localhost:5005/auth/google/callback'),
   FRONTEND_URL: z.string().default('http://localhost:5173/brainwave'),
 })
 

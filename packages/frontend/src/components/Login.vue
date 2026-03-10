@@ -29,14 +29,11 @@ const loginWithGoogle = () => {
   const left = window.screenX + (window.outerWidth - width) / 2
   const top = window.screenY + (window.outerHeight - height) / 2
 
-  const url = `${config.VITE_API_URL}/auth/google`
+  const url = new URL(`${config.VITE_API_URL}/auth/google`)
   const popup = window.open(url, 'google-login', `width=${width},height=${height},left=${left},top=${top}`)
 
   const listener = (event: MessageEvent) => {
-    if (event.origin !== config.VITE_API_URL) return
-
-    console.log('event')
-    console.dir(event)
+    if (event.origin !== url.origin) return
     const { token } = event.data
     if (token) {
       oauthLogin(token).then(() => {
