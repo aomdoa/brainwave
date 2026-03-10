@@ -11,7 +11,7 @@ model User {
   userId    Int      @id @default(autoincrement())
   name      String
   email     String   @unique
-  password  String
+  password  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -19,6 +19,19 @@ model User {
   // Relations
   thoughts      Thought[]      @relation("ThoughtToUser")
   tags          Tag[]          @relation("UserToTag")
+  oAuth         UserOAuth[]    @relation("UserToOAuth")
+}
+
+model UserOAuth {
+  userOAuthId     Int @id @default(autoincrement())
+  userId          Int
+  provider        OAuthProvider
+  providerUserId  String
+
+  // Relation
+  user  User  @relation("UserToOAuth", fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
 }
 
 model Thought {
@@ -107,4 +120,8 @@ enum RelationType {
   CONTRADICTS
   SUPPORTS
   DERIVES_FROM
+}
+
+enum OAuthProvider {
+  GOOGLE
 }

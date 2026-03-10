@@ -7,6 +7,7 @@ import { signToken } from '../utils/jwt'
 import { authMiddleware, AuthRequest } from '../utils/express'
 import { config } from '../utils/config'
 import { RegisterConfig } from '@brainwave/shared'
+import passport from '../utils/passport'
 
 export function registerAuthRoutes(): Router {
   const router = Router()
@@ -37,6 +38,31 @@ export function registerAuthRoutes(): Router {
       minPasswordLength: config.PASSWORD_MIN_LENGTH,
     } as RegisterConfig
     return res.json(registerConfig)
+  })
+
+  router.get(
+    '/google',
+    passport.authenticate('google', {
+      scope: ['profile', 'email'],
+      session: false,
+    })
+  )
+
+  router.get('/google/callback', passport.authenticate('google', { session: false }), async (req: any, res, next) => {
+    try {
+      const token = signToken({ userId: req.user.userId })
+      res.send(`
+        <script>
+          window.opener.postMessage(
+            { token: "${token}" },
+            "${config.FRONTEND_URL}"
+          );
+          window.close();
+        </script>
+      `)
+    } catch (err) {
+      return next(err)
+    }
   })
 
   // private

@@ -2,7 +2,7 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { ref } from 'vue'
-import { login as serviceLogin } from '../api'
+import { me, login as serviceLogin, updateToken } from '../api'
 
 export interface User {
   id: number
@@ -18,6 +18,11 @@ export async function login(email: string, password: string) {
   currentUser.value = user
 }
 
+export async function oauthLogin(token: string) {
+  const user = await updateToken(token)
+  currentUser.value = user
+}
+
 export function logout() {
   localStorage.removeItem('token')
   currentUser.value = null
@@ -25,5 +30,11 @@ export function logout() {
 
 export function isAuthenticated(): boolean {
   const token = localStorage.getItem('token')
-  return token == null ? false : true
+  if (token) {
+    if (currentUser.value == null) {
+      me().then((data) => (currentUser.value = data))
+    }
+    return true
+  }
+  return false
 }

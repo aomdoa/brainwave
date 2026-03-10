@@ -83,7 +83,11 @@ export async function login(email: string, password: string): Promise<User> {
   if (!data.token) {
     throw new Error('Login failed: missing token in response')
   }
-  localStorage.setItem('token', data.token)
+  return updateToken(data.token)
+}
+
+export async function updateToken(token: string): Promise<User> {
+  localStorage.setItem('token', token)
   return me()
 }
 
@@ -160,11 +164,17 @@ export async function deleteThought(thoughtId: number): Promise<ThoughtClient> {
 
 export async function getThoughtConfig(): Promise<ThoughtConfig> {
   const response = await api.get<ThoughtConfig>('/thoughts/config')
+  if (response.statusText !== 'OK') {
+    throw new Error(`Failed to get the thought config: ${response.data}`)
+  }
   return response.data
 }
 
 export async function getTags(): Promise<TagClient[]> {
   const response = await api.get<TagClient[]>('/tags')
+  if (!response || response.statusText !== 'OK') {
+    throw new Error(`Failed to get the tags: ${response.data}`)
+  }
   return response.data
 }
 
@@ -213,6 +223,7 @@ export async function getThoughtHistory(thoughtId: number): Promise<ThoughtHisto
 
 // Report error
 export async function reportError(err: Error, instance: any, info: String) {
+  if (err == null) return
   const error = {
     message: err.message,
     stack: err.stack,
