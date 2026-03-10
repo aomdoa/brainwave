@@ -25,6 +25,9 @@ const schema = z.object({
   JWT_SECRET: z.string().default('dave'),
   JWT_EXPIRES_IN: z.string().default('1h'),
   DOCS_BASE: z.string().default('/'),
+  GOOGLE_CLIENT_ID: z.string(),
+  GOOGLE_CLIENT_SECRET: z.string(),
+  FRONTEND_URL: z.string().default('http://localhost:5173/brainwave'),
 })
 
 export const config = schema.parse(process.env)

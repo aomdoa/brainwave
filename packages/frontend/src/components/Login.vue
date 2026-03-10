@@ -4,7 +4,8 @@
  */
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { login as apiLogin } from '../store/user.store'
+import { login as apiLogin, oauthLogin } from '../store/user.store'
+import { config } from '../utils/config'
 
 const router = useRouter()
 const email = ref('')
@@ -19,6 +20,34 @@ const login = async () => {
     window.alert(`Login failed: ${err.message}`)
   })
   router.push('/dashboard')
+}
+
+const loginWithGoogle = () => {
+  const width = 500
+  const height = 600
+
+  const left = window.screenX + (window.outerWidth - width) / 2
+  const top = window.screenY + (window.outerHeight - height) / 2
+
+  const url = `${config.VITE_API_URL}/auth/google`
+  const popup = window.open(url, 'google-login', `width=${width},height=${height},left=${left},top=${top}`)
+
+  const listener = (event: MessageEvent) => {
+    if (event.origin !== config.VITE_API_URL) return
+
+    console.log('event')
+    console.dir(event)
+    const { token } = event.data
+    if (token) {
+      oauthLogin(token).then(() => {
+        window.removeEventListener('message', listener)
+        popup?.close()
+        router.push('/dashboard')
+      })
+    }
+  }
+
+  window.addEventListener('message', listener)
 }
 </script>
 <template>
@@ -41,6 +70,9 @@ const login = async () => {
       <button type="submit">Login</button>
     </div>
   </form>
+  <div class="oauth">
+    <button type="button" @click="loginWithGoogle">Sign in with Google</button>
+  </div>
   <router-link to="/register">
     Don't have an account? Register <span style="text-decoration: underline">here</span>.
   </router-link>

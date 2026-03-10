@@ -52,7 +52,8 @@ export async function loginUser({ email, password }: { email: string; password: 
     throw new ValidationError('Please provide the email and password')
   }
   const user = await prisma.user.findUnique({ where: { email } })
-  if (!user) {
+  // user.password can be null if 3rd party managed
+  if (!user || user.password == null) {
     throw new ValidationError('Invalid email or password')
   }
 

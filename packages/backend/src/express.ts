@@ -14,6 +14,7 @@ import { registerThoughtTagRoutes } from './routes/thoughtTag.route'
 import { setupSwagger } from './utils/swagger'
 import { registerThoughtRelationRoutes } from './routes/thoughtRelation.route'
 import { registerThoughtHistoryRoutes } from './routes/thoughtHistory.route'
+import passport from './utils/passport'
 
 const serviceLog = logger.child({ file: 'express.ts' })
 
@@ -21,6 +22,10 @@ const serviceLog = logger.child({ file: 'express.ts' })
 export function initialize(): Express {
   const app = express()
   app.set('trust proxy', true)
+
+  app.use(express.json())
+  app.use(cors({ origin: config.CORS_ORIGIN, credentials: true }))
+  app.use(passport.initialize())
 
   // eslint-disable-next-line no-unused-vars
   const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
@@ -34,9 +39,6 @@ export function initialize(): Express {
     }
     if (!expose) serviceLog.error(err)
   }
-
-  app.use(express.json())
-  app.use(cors({ origin: config.CORS_ORIGIN, credentials: true }))
 
   // If we're in debug mode track each request and log the details and duration when it finishes
   if (config.LOG_LEVEL === 'debug') {

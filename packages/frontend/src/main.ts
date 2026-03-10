@@ -12,10 +12,14 @@ const app = createApp(App)
 app.config.errorHandler = (err, instance, info) => {
   if (err) {
     const error = err as Error
-    console.log(JSON.stringify(error))
-    reportError(error, instance, info)
-    router.push('/error')
+    if (error.name === 'TypeError') {
+      router.push('/login')
+      return
+    } else {
+      reportError(error, instance, info)
+    }
   }
+  router.push('/error')
 }
 
 app.use(PrimeVue, { theme: { preset: Aura } })
