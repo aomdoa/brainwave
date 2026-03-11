@@ -7,23 +7,35 @@ import { reportError } from './api'
 import PrimeVue from 'primevue/config'
 import { DatePicker, MultiSelect, Select, AutoComplete, Dialog } from 'primevue'
 import Aura from '@primeuix/themes/aura'
-import 'primeicons/primeicons.css'
-//import { registerSW } from 'virtual:pwa-register'
 
-/*registerSW({
-  immediate: true,
-})
+if (import.meta.env.DEV) {
+  // DEV: manually register our dev SW
+  navigator.serviceWorker
+    .register('/brainwave/dev-sw.js')
+    .then((reg) => console.log('Dev SW registered:', reg))
+    .catch((err) => console.error('Dev SW failed:', err))
+} else {
+  // PROD: let VitePWA handle registration
+  import('virtual:pwa-register').then(({ registerSW }) => {
+    registerSW({
+      onRegistered: (reg) => console.log('Prod SW registered:', reg),
+      onRegisterError: (err) => console.error('Prod SW failed:', err),
+    })
+  })
+}
 
-navigator.serviceWorker.ready.then(() => {
-  console.log('[Page] Service worker is ready and controlling this page!')
-})
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) return
 
-navigator.serviceWorker.addEventListener('message', (event) => {
-  console.dir(event)
-  if (event.data?.type === 'push') {
-    console.log('[Page] Push received from SW:', event.data.data)
+  const permission = await Notification.requestPermission()
+  if (permission === 'granted') {
+    console.log('Notification permission granted!')
+  } else {
+    console.warn('Notification permission denied!')
   }
-})*/
+}
+
+requestNotificationPermission()
 
 const app = createApp(App)
 app.config.errorHandler = (err, instance, info) => {
