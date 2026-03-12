@@ -2795,6 +2795,13 @@
   resolved "https://registry.yarnpkg.com/@types/web-bluetooth/-/web-bluetooth-0.0.21.tgz#525433c784aed9b457aaa0ee3d92aeb71f346b63"
   integrity sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA==
 
+"@types/web-push@^3.6.4":
+  version "3.6.4"
+  resolved "https://registry.yarnpkg.com/@types/web-push/-/web-push-3.6.4.tgz#4c6e10d3963ba51e7b4b8fff185f43612c0d1346"
+  integrity sha512-GnJmSr40H3RAnj0s34FNTcJi1hmWFV5KXugE0mYWnYhgTAHLJ/dJKAwDmvPJYMke0RplY2XE9LnM4hqSqKIjhQ==
+  dependencies:
+    "@types/node" "*"
+
 "@types/yamljs@^0.2.34":
   version "0.2.34"
   resolved "https://registry.yarnpkg.com/@types/yamljs/-/yamljs-0.2.34.tgz#c10b1f31b173f2cc93342f27b0796c2eb5b3ae84"

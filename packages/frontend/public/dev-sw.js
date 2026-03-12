@@ -1,4 +1,6 @@
-// public/brainwave/dev-sw.js
+/**
+ * Provide 'dev' version of the sw
+ */
 self.addEventListener('install', (event) => {
   console.log('Dev SW installing…')
   self.skipWaiting()
@@ -12,10 +14,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
   console.dir(event)
   const data = event.data?.json() || { title: 'Brainwave Dev', body: 'Test push' }
-  console.log(data.title)
-  console.log(data.body)
+  console.log(`push event with: ${Notification.permission} and ${JSON.stringify(data)}`)
   event.waitUntil(
     self.registration.showNotification(data.title, { body: data.body, icon: '/brainwave/icons/brainwave-192.png' })
   )
-  console.log('done')
+})
+
+self.addEventListener('message', (event) => {
+  console.log('message')
+  console.dir(event)
 })
