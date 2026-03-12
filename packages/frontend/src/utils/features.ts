@@ -28,6 +28,10 @@ export async function pwaConfigure(reg: ServiceWorkerRegistration | undefined) {
     console.warn('No pwa setup...')
     return
   }
+  const permission = await Notification.requestPermission()
+  if (permission !== 'granted') {
+    window.alert('Please subscribe for updates... someday this will be on screen alert')
+  }
   await subscribeUser(reg)
 }
 
@@ -40,12 +44,10 @@ export function setupPwa() {
       .catch((err) => console.error('Dev SW failed:', err))
   } else {
     console.debug('prod sw')
-    import('virtual:pwa-register').then(({ registerSW }) => {
-      registerSW({
-        onRegistered: (reg) => pwaConfigure(reg),
-        onRegisterError: (err) => console.error('Prod SW failed:', err),
-      })
-    })
+    navigator.serviceWorker
+      .register('/brainwave/sw.js', { scope: '/brainwave/' })
+      .then((reg) => pwaConfigure(reg))
+      .catch((err) => console.error('SW registration failed:', err))
   }
 }
 

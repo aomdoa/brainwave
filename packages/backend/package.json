@@ -49,8 +49,7 @@
     "tsc": "^2.0.4",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.55.0",
-    "web-push": "^3.6.7"
+    "typescript-eslint": "^8.55.0"
   },
   "dependencies": {
     "@brainwave/shared": "1.0.0",
@@ -72,6 +71,7 @@
     "sqlite3": "^5.1.7",
     "swagger-parser": "^10.0.3",
     "swagger-ui-express": "^5.0.1",
+    "web-push": "^3.6.7",
     "yamljs": "^0.3.0",
     "zod": "^4.3.6"
   }

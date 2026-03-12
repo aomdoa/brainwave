@@ -27,7 +27,6 @@ export default defineConfig({
         // specify source SW
         swSrc: 'src/sw.ts', // <-- this is the source TS file
       },
-
       devOptions: {
         enabled: false, // enable PWA in dev for testing
       },

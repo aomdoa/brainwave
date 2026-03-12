@@ -1,11 +1,22 @@
 /// <reference lib="webworker" />
 // @ts-nocheck
 import { precacheAndRoute } from 'workbox-precaching'
-declare const __WB_MANIFEST: Array<any>
+const manifest = self.__WB_MANIFEST || []
+precacheAndRoute(manifest)
 
-precacheAndRoute(__WB_MANIFEST)
+self.addEventListener('install', (event: ExtendableEvent) => {
+  console.log('install')
+  self.skipWaiting()
+})
+
+self.addEventListener('activate', (event: ExtendableEvent) => {
+  console.log('activate')
+  event.waitUntil(self.clients.claim())
+})
 
 self.addEventListener('push', (event: PushEvent) => {
+  console.log('push')
+  console.dir(event)
   let data = { title: 'Brainwave', body: 'Push received' }
 
   if (event.data) {
