@@ -15,6 +15,7 @@ import { setupSwagger } from './utils/swagger'
 import { registerThoughtRelationRoutes } from './routes/thoughtRelation.route'
 import { registerThoughtHistoryRoutes } from './routes/thoughtHistory.route'
 import passport from './utils/passport'
+import { registerSubscribeRoutes } from './routes/subscribe.route'
 
 const serviceLog = logger.child({ file: 'express.ts' })
 
@@ -66,6 +67,7 @@ export function initialize(): Express {
   app.use('/thoughts', registerThoughtRelationRoutes())
   app.use('/thoughts', registerThoughtHistoryRoutes())
   app.use('/tags', registerTagRoutes())
+  app.use('/push', registerSubscribeRoutes())
   app.use('/health', registerHealthRoutes())
 
   // Swagger

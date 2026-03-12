@@ -2,15 +2,34 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { buildInfo } from './build-info'
-import PrimevuePreload from './components/PrimevuePreload.vue'
-import { router } from './router'
-import { logout, isAuthenticated } from './store/user.store'
+import { buildInfo } from '../build-info'
+import PrimevuePreload from './PrimevuePreload.vue'
+import { router } from '../router'
+import { logout, isAuthenticated } from '../store/user.store'
+import { requestNotificationPermission, setupPwa } from '../utils/features'
+import { ref, watch } from 'vue'
+
+const loggedIn = ref(false)
 
 const logoutUser = () => {
   logout()
   return router.push('/login')
 }
+
+const subscribe = () => {
+  requestNotificationPermission()
+}
+
+watch(
+  () => isAuthenticated(),
+  async (isAuthed) => {
+    loggedIn.value = isAuthed
+    if (isAuthed) {
+      setupPwa()
+    }
+  },
+  { immediate: true }
+)
 </script>
 <template>
   <PrimevuePreload />
@@ -19,7 +38,10 @@ const logoutUser = () => {
       <img src="/brainwave.png" class="logo" alt="Brainwave logo" />
       <a href="/" class="title">Brainwave</a>
     </div>
-    <div><a v-if="isAuthenticated()" v-on:click="logoutUser" class="logout">Logout</a></div>
+    <div v-if="loggedIn">
+      <a v-on:click="subscribe" class="subscribe">Subscribe</a>
+      <a v-on:click="logoutUser" class="logout">Logout</a>
+    </div>
   </div>
   <div class="main">
     <router-view />
@@ -31,6 +53,11 @@ const logoutUser = () => {
 </template>
 
 <style scoped>
+.subscribe {
+  padding-right: 2rem;
+}
+
+.subscribe,
 .logout {
   cursor: pointer;
   font-size: smaller;

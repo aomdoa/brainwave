@@ -216,9 +216,16 @@ export async function saveThoughtRelations(
 export async function getThoughtHistory(thoughtId: number): Promise<ThoughtHistoryClient[]> {
   const response = await api.get<ThoughtHistoryClient[]>(`thoughts/${thoughtId}/history`)
   if (response.statusText !== 'OK') {
-    throw new Error(`Filed to get thought history for ${thoughtId}: ${response.data}`)
+    throw new Error(`Failed to get thought history for ${thoughtId}: ${response.data}`)
   }
   return response.data
+}
+
+export async function subscribeEvents(sub: any): Promise<void> {
+  const response = await api.post(`push/subscribe`, sub)
+  if (response.statusText !== 'Created') {
+    throw new Error(`Failed to subscribe to events: ${response.data}`)
+  }
 }
 
 // Report error

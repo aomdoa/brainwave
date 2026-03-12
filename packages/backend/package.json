@@ -33,6 +33,7 @@
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/pino": "^7.0.5",
     "@types/swagger-ui-express": "^4.1.8",
+    "@types/web-push": "^3.6.4",
     "@types/yamljs": "^0.2.34",
     "cspell": "^9.6.4",
     "eslint": "^10.0.0",
@@ -70,6 +71,7 @@
     "sqlite3": "^5.1.7",
     "swagger-parser": "^10.0.3",
     "swagger-ui-express": "^5.0.1",
+    "web-push": "^3.6.7",
     "yamljs": "^0.3.0",
     "zod": "^4.3.6"
   }

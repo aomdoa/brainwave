@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "clean": "rimraf ./dist",
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "yarn clean && node _scripts/build.mjs && vue-tsc -b && vite build --mode production",
     "preview": "vite preview",
     "package": "node _scripts/package.mjs"
@@ -19,6 +19,7 @@
     "dayjs": "^1.11.19",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.4",
+    "vite-plugin-pwa": "^1.2.0",
     "vue": "^3.5.25",
     "zod": "^4.3.6"
   },
