@@ -30,7 +30,7 @@ self.addEventListener('push', (event: PushEvent) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/brainwave/icons/brainwave-192.png',
+      icon: '/icons/brainwave-192.png',
     })
   )
 })

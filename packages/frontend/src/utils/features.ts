@@ -48,13 +48,13 @@ export function setupPwa() {
   if (import.meta.env.DEV) {
     console.debug('dev sw')
     navigator.serviceWorker
-      .register('/brainwave/dev-sw.js')
+      .register('/dev-sw.js')
       .then((reg) => pwaConfigure(reg))
       .catch((err) => console.error('Dev SW failed:', err))
   } else {
     console.debug('prod sw')
     navigator.serviceWorker
-      .register('/brainwave/sw.js', { scope: '/brainwave/' })
+      .register('/sw.js', { scope: '/brainwave/' })
       .then((reg) => pwaConfigure(reg))
       .catch((err) => console.error('SW registration failed:', err))
   }

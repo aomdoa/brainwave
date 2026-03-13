@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
       }
     : undefined
   return {
-    base: '/brainwave/',
+    base: '/',
     build: {
       sourcemap: false,
     },
@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => {
           name: 'Brainwave',
           short_name: 'Brainwave',
           description: 'Brainwave PWA',
-          start_url: '/brainwave/',
+          start_url: '/',
           display: 'standalone',
           background_color: '#ffffff',
           theme_color: '#4f46e5',
@@ -57,8 +57,7 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          // just log what workbox sees for now
-          navigateFallback: '/brainwave/index.html',
+          navigateFallback: '/index.html',
         },
       }),
     ],

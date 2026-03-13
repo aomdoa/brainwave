@@ -15,9 +15,7 @@ self.addEventListener('push', (event) => {
   console.dir(event)
   const data = event.data?.json() || { title: 'Brainwave Dev', body: 'Test push' }
   console.log(`push event with: ${Notification.permission} and ${JSON.stringify(data)}`)
-  event.waitUntil(
-    self.registration.showNotification(data.title, { body: data.body, icon: '/brainwave/icons/brainwave-192.png' })
-  )
+  event.waitUntil(self.registration.showNotification(data.title, { body: data.body, icon: '/icons/brainwave-192.png' }))
 })
 
 self.addEventListener('message', (event) => {
