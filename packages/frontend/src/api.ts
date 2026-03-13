@@ -19,6 +19,7 @@ import type {
   ThoughtSearchParams,
   ThoughtSearchResults,
   ThoughtSimplifiedRelation,
+  ThoughtStatus,
 } from '@brainwave/shared'
 import type { User } from './store/user.store'
 
@@ -154,10 +155,10 @@ export async function saveThought(thought: ThoughtClientCreate | ThoughtClientUp
   return response.data
 }
 
-export async function deleteThought(thoughtId: number): Promise<ThoughtClient> {
-  const response = await api.delete<ThoughtClient>(`thoughts/${thoughtId}`)
+export async function setThoughtStatus(thoughtId: number, status: ThoughtStatus): Promise<ThoughtClient> {
+  const response = await api.patch<ThoughtClient>(`thoughts/${thoughtId}`, { status })
   if (response.statusText !== 'OK') {
-    throw new Error(`Failed to remove thought ${thoughtId}: ${response.data}`)
+    throw new Error(`Failed to update thought ${thoughtId} to status ${status}: ${response.data}`)
   }
   return response.data
 }

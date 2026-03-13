@@ -4,9 +4,10 @@
  */
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
 import {
-  deleteThought,
+  setThoughtStatus,
   getTags,
   getThoughtById,
   getThoughtConfig,
@@ -25,6 +26,7 @@ import {
   type ThoughtClient,
   thoughtClientCreateSchema,
   type ThoughtHistoryClient,
+  type ThoughtStatus,
 } from '@brainwave/shared'
 
 const route = useRoute()
@@ -51,7 +53,7 @@ const thoughtHistory = ref<ThoughtHistoryClient[]>([])
 const showHistory = ref(false)
 const schema = ref<ReturnType<typeof thoughtClientCreateSchema> | null>(null)
 const errors = ref<Record<string, string>>({})
-
+const confirm = useConfirm()
 // functions
 const thoughtId = ref(Number(route.params.thoughtId))
 
@@ -120,11 +122,32 @@ const save = async () => {
   status.value = 'loaded'
 }
 
-const remove = async () => {
+const switchStatus = async () => {
   if (thought.value.thoughtId == null) return
-  if (window.confirm('Are you sure we want to delete the thought?')) {
-    await deleteThought(thought.value.thoughtId)
+  const newStatus = thought.value.status === 'ACTIVE' ? 'CLOSED' : 'ACTIVE'
+  if (newStatus === 'CLOSED') {
+    confirm.require({
+      message: 'Archive this thought?',
+      header: undefined,
+      icon: undefined,
+      accept: () => {
+        doSwitchStatus(newStatus)
+      },
+    })
+  } else {
+    doSwitchStatus(newStatus)
+  }
+}
+
+const doSwitchStatus = async (newStatus: ThoughtStatus) => {
+  status.value = 'saving'
+  const updatedThought = await setThoughtStatus(thought.value.thoughtId, newStatus)
+  if (newStatus === 'CLOSED') {
     router.back()
+  } else {
+    thought.value = updatedThought
+    thoughtHistory.value = await getThoughtHistory(thought.value.thoughtId)
+    status.value = 'loaded'
   }
 }
 
@@ -326,7 +349,9 @@ onMounted(async () => {
       <div class="form-group actions">
         <button type="button" @click="goBack">Back</button>
         <div style="margin-left: auto">
-          <button v-if="thought.thoughtId != null" type="button" @click="remove">Delete</button>
+          <button v-if="thought.thoughtId != null" type="button" @click="switchStatus" variant="outlined">
+            {{ thought.status === 'ACTIVE' ? 'Archive' : 'Unarchive' }}
+          </button>
           <button style="margin-left: 1em" type="submit">{{ thought.thoughtId > 0 ? 'Update' : 'Create' }}</button>
         </div>
       </div>

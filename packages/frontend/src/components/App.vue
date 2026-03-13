@@ -5,11 +5,13 @@
 import { buildInfo } from '../build-info'
 import PrimevuePreload from './PrimevuePreload.vue'
 import { router } from '../router'
-import { logout, isAuthenticated } from '../store/user.store'
+import { logout } from '../store/user.store'
 import { requestNotificationPermission, setupPwa } from '../utils/features'
-import { ref, watch } from 'vue'
+import { currentUser } from '../store/user.store'
+import { computed, watchEffect } from 'vue'
 
-const loggedIn = ref(false)
+const loggedIn = computed(() => !!currentUser.value)
+const subscribed = computed(() => currentUser.value?.isSubscribed)
 
 const logoutUser = () => {
   logout()
@@ -20,16 +22,11 @@ const subscribe = () => {
   requestNotificationPermission()
 }
 
-watch(
-  () => isAuthenticated(),
-  async (isAuthed) => {
-    loggedIn.value = isAuthed
-    if (isAuthed) {
-      setupPwa()
-    }
-  },
-  { immediate: true }
-)
+watchEffect(() => {
+  if (loggedIn.value && subscribed.value) {
+    setupPwa()
+  }
+})
 </script>
 <template>
   <PrimevuePreload />
@@ -39,7 +36,8 @@ watch(
       <a href="/" class="title">Brainwave</a>
     </div>
     <div v-if="loggedIn">
-      <a v-on:click="subscribe" class="subscribe">Subscribe</a>
+      <a v-if="!subscribed" v-on:click="subscribe" class="subscribe">Subscribe</a>
+      <a v-else class="subscribe">Subscribed</a>
       <a v-on:click="logoutUser" class="logout">Logout</a>
     </div>
   </div>

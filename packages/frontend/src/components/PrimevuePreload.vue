@@ -2,12 +2,8 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import AutoComplete from 'primevue/autocomplete'
-import Select from 'primevue/select'
-import MultiSelect from 'primevue/multiselect'
-import DatePicker from 'primevue/datepicker'
-import Dialog from 'primevue/dialog'
 </script>
+
 <template>
   <div style="display: none">
     <AutoComplete />
@@ -15,5 +11,6 @@ import Dialog from 'primevue/dialog'
     <MultiSelect />
     <DatePicker />
     <Dialog />
+    <ConfirmDialog :closable="false" />
   </div>
 </template>

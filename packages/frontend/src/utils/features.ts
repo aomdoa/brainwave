@@ -23,16 +23,25 @@ export async function subscribeUser(reg: ServiceWorkerRegistration) {
   await subscribeEvents(sub).catch((err) => console.error(err))
 }
 
+export async function isSubscribed(): Promise<boolean> {
+  const permission = await Notification.requestPermission()
+  if (permission === 'granted') {
+    return true
+  } else {
+    return false
+  }
+}
+
 export async function pwaConfigure(reg: ServiceWorkerRegistration | undefined) {
   if (!reg) {
     console.warn('No pwa setup...')
     return
   }
   const permission = await Notification.requestPermission()
-  if (permission !== 'granted') {
-    window.alert('Please subscribe for updates... someday this will be on screen alert')
+  if (permission === 'granted') {
+    console.log('subscribed')
+    await subscribeUser(reg)
   }
-  await subscribeUser(reg)
 }
 
 export function setupPwa() {
@@ -54,7 +63,6 @@ export function setupPwa() {
 // send notifications
 export async function requestNotificationPermission() {
   if (!('Notification' in window)) return
-
   const permission = await Notification.requestPermission()
   if (permission === 'granted') {
     console.log('Notification permission granted!')
