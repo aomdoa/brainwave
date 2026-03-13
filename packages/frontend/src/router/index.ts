@@ -7,6 +7,7 @@ import DashboardPage from '../components/Dashboard.vue'
 import RegisterPage from '../components/Register.vue'
 import ErrorPage from '../components/Error.vue'
 import Thought from '../components/Thought.vue'
+import { isAuthenticated } from '../store/user.store'
 
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/login' },
@@ -22,15 +23,15 @@ const routes: RouteRecordRaw[] = [
 ]
 
 export const router = createRouter({
-  history: createWebHistory('/brainwave/'),
+  history: createWebHistory('/'),
   routes,
 })
 
 router.beforeEach((to, _from, next) => {
-  const token = localStorage.getItem('token')
-  if (to.meta.requiresAuth && !token) {
+  const isAuth = isAuthenticated()
+  if (to.meta.requiresAuth && !isAuth) {
     next('/login')
-  } else if (to.path === '/login' && token) {
+  } else if (to.path === '/login' && isAuth) {
     next('/dashboard')
   } else {
     next()

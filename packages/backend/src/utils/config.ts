@@ -28,7 +28,7 @@ const schema = z.object({
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),
   GOOGLE_CALLBACK_URL: z.string().default('http://localhost:5005/auth/google/callback'),
-  FRONTEND_URL: z.string().default('http://localhost:5173/brainwave'),
+  FRONTEND_URL: z.string().default('http://localhost:5173/'),
   VAPID_PUBLIC_KEY: z.string(),
   VAPID_PRIVATE_KEY: z.string(),
   VAPID_EMAIL: z.string().default('mailto:aomdoa@gmail.com'),

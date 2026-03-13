@@ -82,6 +82,7 @@ const selectionChange = () => {
 }
 
 const fetchThoughts = async () => {
+  console.dir(currentUser.value)
   const { thoughts: fetchedThoughts, page } = await getThoughts({
     orderBy: {
       field: pagination.orderBy,

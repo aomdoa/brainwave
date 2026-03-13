@@ -3,8 +3,6 @@ info:
   title: Brainwave Auth API
   version: 1.0.0
   description: Authentication endpoints for Brainwave service
-servers:
-  - url: https://api.brainwave.com/v1
 tags:
   - name: Auth
     description: Endpoints for the authentication and user management
