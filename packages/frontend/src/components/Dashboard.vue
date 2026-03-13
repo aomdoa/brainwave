@@ -5,14 +5,19 @@
 import { ref, onMounted, reactive, watch } from 'vue'
 import { refDebounced, useBreakpoints } from '@vueuse/core'
 import { type TagClient, type ThoughtClient } from '@brainwave/shared'
-import { getTags, getThoughts, me } from '../api'
+import { getTags, getThoughts } from '../api'
 import { router } from '../router'
 import dayjs from 'dayjs'
+import { currentUser } from '../store/user.store'
 
 let tags: TagClient[] = []
 const pageSize = 20
-const user = ref<{ id: number; email: string; name?: string } | null>(null)
 const search = ref('')
+const statuses = ref([
+  { name: 'Active', value: 'ACTIVE' },
+  { name: 'Closed', value: 'CLOSED' },
+])
+const selectedStatus = ref(statuses.value[0])
 const tag = ref<TagClient | null>(null)
 const thoughts = ref<ThoughtClient[]>([])
 const pagination = reactive({
@@ -72,7 +77,7 @@ const goToThought = (id: number) => {
   router.push(`/thoughts/${id}`)
 }
 
-const selectTag = () => {
+const selectionChange = () => {
   fetchThoughts()
 }
 
@@ -82,11 +87,18 @@ const fetchThoughts = async () => {
       field: pagination.orderBy,
       direction: pagination.orderDesc ? 'desc' : 'asc',
     },
+    filter: [
+      {
+        field: 'status',
+        operator: 'eq',
+        value: selectedStatus.value?.value ?? 'ACTIVE',
+        logical: 'and',
+      },
+    ],
     search: search.value.length > 0 ? search.value : undefined,
     page: pagination.currentPage,
     size: pageSize,
     tagId: tag.value?.tagId ? [tag.value.tagId] : undefined,
-    filter: [],
   })
   pagination.currentPage = page.current
   pagination.currentPageSize = page.size
@@ -97,17 +109,16 @@ const fetchThoughts = async () => {
 onMounted(async () => {
   tags = await getTags()
   await fetchThoughts()
-  user.value = await me()
 })
 </script>
 
 <template>
-  <div v-if="user">
-    <h1>Welcome, {{ user.name || user.email }}!</h1>
+  <div v-if="currentUser">
+    <h1>Welcome, {{ currentUser.name || currentUser.email }}!</h1>
     <div class="controls">
       <input type="text" v-model="search" @keyup.enter="onSearch()" placeholder="Search thoughts..." />
       <Select
-        @change="selectTag"
+        @change="selectionChange"
         class="tag-select"
         v-model="tag"
         :options="tags"
@@ -116,6 +127,15 @@ onMounted(async () => {
         showClear
         :title="tag?.name"
       />
+      <Select
+        @change="selectionChange"
+        class="status-select"
+        v-model="selectedStatus"
+        :options="statuses"
+        optionLabel="name"
+        :title="selectedStatus?.name"
+      />
+
       <button @click="create">Add Thought</button>
     </div>
 
@@ -209,5 +229,12 @@ onMounted(async () => {
 .tag-select {
   margin-left: 1rem;
   width: 12rem;
+}
+.status-select {
+  margin-left: 1rem;
+  width: 8rem;
+}
+.controls .p-select-label {
+  font-size: 0.8rem;
 }
 </style>

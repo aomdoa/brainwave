@@ -7,6 +7,7 @@ import PrimevuePreload from './PrimevuePreload.vue'
 import { router } from '../router'
 import { logout, isAuthenticated } from '../store/user.store'
 import { requestNotificationPermission, setupPwa } from '../utils/features'
+import { currentUser } from '../store/user.store'
 import { ref, watch } from 'vue'
 
 const loggedIn = ref(false)
@@ -39,7 +40,8 @@ watch(
       <a href="/" class="title">Brainwave</a>
     </div>
     <div v-if="loggedIn">
-      <a v-on:click="subscribe" class="subscribe">Subscribe</a>
+      <a v-if="!currentUser?.isSubscribed" v-on:click="subscribe" class="subscribe">Subscribe</a>
+      <a v-else class="subscribe">Subscribed</a>
       <a v-on:click="logoutUser" class="logout">Logout</a>
     </div>
   </div>
