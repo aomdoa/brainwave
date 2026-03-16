@@ -12,8 +12,9 @@ To help support the build and usage of the @brainwave/shared I recommend using v
 
 ### Production Services
 
-- https://console.kamatera.com/servers
+- https://console.kamatera.com/servers (server)
 - https://www.namespro.ca/MyAccount.asp (DNS and email)
+- https://console.cloud.google.com/auth/overview (google auth)
 
 ## Backend
 
