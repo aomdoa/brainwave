@@ -7,6 +7,7 @@ import DashboardPage from '../components/Dashboard.vue'
 import RegisterPage from '../components/Register.vue'
 import ErrorPage from '../components/Error.vue'
 import Thought from '../components/Thought.vue'
+import Confirm from '../components/Confirm.vue'
 import { isAuthenticated } from '../store/user.store'
 
 const routes: RouteRecordRaw[] = [
@@ -14,6 +15,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/login', component: LoginPage },
   { path: '/register', component: RegisterPage },
   { path: '/error', component: ErrorPage },
+  { path: '/confirm', component: Confirm },
   {
     path: '/dashboard',
     component: DashboardPage,

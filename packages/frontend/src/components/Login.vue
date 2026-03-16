@@ -11,11 +11,11 @@ const router = useRouter()
 const email = ref('')
 const password = ref('')
 const isProcessing = ref(false)
-const welcomeName = ref('')
+const message = ref('')
 const failed = ref('')
 
 onMounted(() => {
-  welcomeName.value = (router.options.history.state?.userName as string) ?? ''
+  message.value = (router.options.history.state?.message as string) ?? ''
 })
 
 const login = async () => {
@@ -67,7 +67,7 @@ const loginWithGoogle = () => {
     dashboard, where you can monitor your brain activity, set goals, and explore new ways to enhance your cognitive
     abilities.
   </p>
-  <p v-if="welcomeName">Welcome {{ welcomeName }}! Please log in to continue.</p>
+  <p v-if="message">{{ message }}</p>
   <p v-if="failed" style="color: red">{{ failed }}</p>
   <form @submit.prevent="login">
     <div class="form-group">

@@ -2,13 +2,14 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { User } from '@prisma/client'
-import { Md5 } from 'ts-md5'
 import { ConflictError, NotFoundError, ValidationError } from '../utils/error'
 import { prisma } from '../utils/prisma'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import logger from '../utils/logger'
 import { type UserServerCreate, userServerCreateSchema } from '@brainwave/shared'
 import { config } from '../utils/config'
+import { sendConfirmationEmail } from '../utils/email'
 
 const serviceLog = logger.child({ file: 'user.service.ts' })
 export type SafeUser = Omit<User, 'password'>
@@ -90,8 +91,9 @@ export async function sendConfirmation(userId: number): Promise<boolean> {
     logger.warn(`Confirmed user ${user.email} attempted to resend confirmation`)
     throw new NotFoundError('User not found')
   }
-  const confirmation = Md5.hashStr(user.createdAt.toString())
-  // send the email
+
+  const confirmation = crypto.createHash('md5').update(user.createdAt.toString()).digest('hex')
+  await sendConfirmationEmail(user.email, confirmation)
   console.log(
     `Send email to ${user.email} with url ${config.FRONTEND_URL}confirm?email=${user.email}&token=${confirmation}`
   )
@@ -103,7 +105,8 @@ export async function getConfirmation(email: string, token: string): Promise<boo
   if (!user) {
     throw new NotFoundError('User not found')
   }
-  const confirmation = Md5.hashStr(user.createdAt.toString())
+
+  const confirmation = crypto.createHash('md5').update(user.createdAt.toString()).digest('hex')
   if (user.isConfirmed || confirmation !== token) {
     logger.warn(`Potential attempt to get invalid confirmation for ${email}`)
     throw new NotFoundError('User not found')

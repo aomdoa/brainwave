@@ -237,6 +237,15 @@ export async function subscribeEvents(sub: any): Promise<void> {
   }
 }
 
+export async function confirmAccount(email: string, token: string): Promise<boolean> {
+  const response = await api.get(`user/getConfirmation?email=${email}&token=${token}`)
+  if (response.statusText !== 'OK') {
+    throw new Error(`Unable to confirm account: ${response.data}`)
+  }
+  console.dir(response.data)
+  return true
+}
+
 // Report error
 export async function reportError(err: Error, instance: any, info: String) {
   if (err == null) return

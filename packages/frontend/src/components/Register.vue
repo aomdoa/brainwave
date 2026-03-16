@@ -60,7 +60,12 @@ const register = async () => {
   })
 
   if (user) {
-    router.push({ path: '/login', state: { userName: user.name } })
+    router.push({
+      path: '/login',
+      state: {
+        message: `${user.name} your confirmation link has been sent to your email. Please check and complete your setup.`,
+      },
+    })
   }
 }
 </script>

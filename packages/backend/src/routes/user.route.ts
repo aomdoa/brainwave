@@ -17,6 +17,7 @@ export function registerUserRoutes(): Router {
   router.post('/register', async (req, res, next) => {
     try {
       const user = await createUser(req.body)
+      await sendConfirmation(user.userId)
       return res.json(user)
     } catch (err) {
       return next(err)
@@ -28,6 +29,7 @@ export function registerUserRoutes(): Router {
       const user = await loginUser(req.body)
       if (!user.isConfirmed) {
         // not confirmed - let the consumer know
+        await sendConfirmation(user.userId)
         throw new ForbiddenError('Please completed account validation')
       }
       const token = signToken({ userId: user.userId })
