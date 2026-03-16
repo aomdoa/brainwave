@@ -8,6 +8,7 @@ import config from './config'
 
 export interface AuthRequest extends express.Request {
   userId?: number
+  isConfirmed?: boolean
 }
 
 export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
@@ -23,6 +24,7 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
 
   try {
     const payload = jwt.verify(token, config.JWT_SECRET) as { userId: number }
+    console.log(`Payload is ${JSON.stringify(payload)}`)
     req.userId = payload.userId
     return next()
   } catch {

@@ -10,16 +10,30 @@ import { config } from '../utils/config'
 const router = useRouter()
 const email = ref('')
 const password = ref('')
+const isProcessing = ref(false)
 const welcomeName = ref('')
+const failed = ref('')
 
 onMounted(() => {
   welcomeName.value = (router.options.history.state?.userName as string) ?? ''
 })
+
 const login = async () => {
-  await apiLogin(email.value, password.value).catch((err) => {
-    window.alert(`Login failed: ${err.message}`)
-  })
-  router.push('/dashboard')
+  if (isProcessing.value) return
+  isProcessing.value = true
+  apiLogin(email.value, password.value)
+    .then(() => {
+      router.push('/dashboard')
+    })
+    .catch((err) => {
+      const error = err as Error
+      if (error.message === 'need confirmation') {
+        failed.value = 'You must confirm your account before logging in, please check your email'
+      } else {
+        failed.value = 'Invalid credentials provided, please check your input'
+      }
+      isProcessing.value = false
+    })
 }
 
 const loginWithGoogle = () => {
@@ -54,6 +68,7 @@ const loginWithGoogle = () => {
     abilities.
   </p>
   <p v-if="welcomeName">Welcome {{ welcomeName }}! Please log in to continue.</p>
+  <p v-if="failed" style="color: red">{{ failed }}</p>
   <form @submit.prevent="login">
     <div class="form-group">
       <label for="email">Email: </label>
@@ -64,7 +79,7 @@ const loginWithGoogle = () => {
       <input id="password" v-model="password" type="password" />
     </div>
     <div class="form-group actions">
-      <button type="submit">Login</button>
+      <button id="login" type="submit" :disabled="isProcessing">{{ isProcessing ? 'Logging in...' : 'Login' }}</button>
     </div>
   </form>
   <div class="oauth">

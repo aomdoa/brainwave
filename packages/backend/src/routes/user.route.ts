@@ -8,6 +8,7 @@ import { authMiddleware, AuthRequest } from '../utils/express'
 import { config } from '../utils/config'
 import { UserConfig } from '@brainwave/shared'
 import passport from '../utils/passport'
+import { ForbiddenError } from '../utils/error'
 
 export function registerUserRoutes(): Router {
   const router = Router()
@@ -25,6 +26,10 @@ export function registerUserRoutes(): Router {
   router.post('/login', async (req, res, next) => {
     try {
       const user = await loginUser(req.body)
+      if (!user.isConfirmed) {
+        // not confirmed - let the consumer know
+        throw new ForbiddenError('Please completed account validation')
+      }
       const token = signToken({ userId: user.userId })
       return res.json({ token })
     } catch (err) {

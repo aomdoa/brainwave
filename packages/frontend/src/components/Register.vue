@@ -3,7 +3,7 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { ref, onMounted } from 'vue'
-import { createRegisterSchema } from '@brainwave/shared'
+import { userClientCreateSchema } from '@brainwave/shared'
 import { getAuthConfig, registerUser } from '../api'
 import { router } from '../router'
 
@@ -14,13 +14,13 @@ const form = ref({
   confirmPassword: '',
 })
 const status = ref('loading')
-const schema = ref<ReturnType<typeof createRegisterSchema> | null>(null)
+const schema = ref<ReturnType<typeof userClientCreateSchema> | null>(null)
 const errors = ref<Record<string, string>>({})
 
 onMounted(async () => {
   try {
     const config = await getAuthConfig()
-    schema.value = createRegisterSchema(config)
+    schema.value = userClientCreateSchema(config)
   } finally {
     status.value = 'loaded'
   }
