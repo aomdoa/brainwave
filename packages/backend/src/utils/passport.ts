@@ -49,7 +49,7 @@ passport.use(
         })
 
         if (!user) {
-          user = await prisma.user.create({ data: { email, name } })
+          user = await prisma.user.create({ data: { email, name, isConfirmed: true } })
         }
 
         await prisma.userOAuth.create({
