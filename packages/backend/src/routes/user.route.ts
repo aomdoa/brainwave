@@ -2,20 +2,22 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { Router } from 'express'
-import { createUser, getUser, loginUser } from '../services/user.service'
+import { createUser, getConfirmation, getUser, loginUser, sendConfirmation } from '../services/user.service'
 import { signToken } from '../utils/jwt'
 import { authMiddleware, AuthRequest } from '../utils/express'
 import { config } from '../utils/config'
-import { RegisterConfig } from '@brainwave/shared'
+import { UserConfig } from '@brainwave/shared'
 import passport from '../utils/passport'
+import { ForbiddenError } from '../utils/error'
 
-export function registerAuthRoutes(): Router {
+export function registerUserRoutes(): Router {
   const router = Router()
 
   // public
   router.post('/register', async (req, res, next) => {
     try {
       const user = await createUser(req.body)
+      await sendConfirmation(user.userId)
       return res.json(user)
     } catch (err) {
       return next(err)
@@ -25,8 +27,24 @@ export function registerAuthRoutes(): Router {
   router.post('/login', async (req, res, next) => {
     try {
       const user = await loginUser(req.body)
+      if (!user.isConfirmed) {
+        // not confirmed - let the consumer know
+        await sendConfirmation(user.userId)
+        throw new ForbiddenError('Please completed account validation')
+      }
       const token = signToken({ userId: user.userId })
       return res.json({ token })
+    } catch (err) {
+      return next(err)
+    }
+  })
+
+  router.get('/getConfirmation', async (req, res, next) => {
+    try {
+      const email = (req.query.email as string) ?? ''
+      const confirmation = (req.query.token as string) ?? ''
+      const confirmed = await getConfirmation(email, confirmation)
+      return res.json({ confirmed })
     } catch (err) {
       return next(err)
     }
@@ -36,7 +54,7 @@ export function registerAuthRoutes(): Router {
     const registerConfig = {
       minNameLength: config.NAME_MIN_LENGTH,
       minPasswordLength: config.PASSWORD_MIN_LENGTH,
-    } as RegisterConfig
+    } as UserConfig
     return res.json(registerConfig)
   })
 
@@ -70,6 +88,15 @@ export function registerAuthRoutes(): Router {
     try {
       const user = await getUser(req.userId ?? 0)
       return res.json({ ...user })
+    } catch (err) {
+      return next(err)
+    }
+  })
+
+  router.post('/sendConfirmation', authMiddleware, async (req: AuthRequest, res, next) => {
+    try {
+      await sendConfirmation(req.userId ?? 0)
+      return res.json({ status: 'sent' })
     } catch (err) {
       return next(err)
     }

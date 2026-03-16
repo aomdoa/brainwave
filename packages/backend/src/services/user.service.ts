@@ -5,9 +5,11 @@ import { User } from '@prisma/client'
 import { ConflictError, NotFoundError, ValidationError } from '../utils/error'
 import { prisma } from '../utils/prisma'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import logger from '../utils/logger'
-import { createRegisterSchema, type RegisterInput } from '@brainwave/shared'
+import { type UserServerCreate, userServerCreateSchema } from '@brainwave/shared'
 import { config } from '../utils/config'
+import { sendConfirmationEmail } from '../utils/email'
 
 const serviceLog = logger.child({ file: 'user.service.ts' })
 export type SafeUser = Omit<User, 'password'>
@@ -18,8 +20,8 @@ function toSafeUser(user: User): SafeUser {
   return safeUser
 }
 
-export async function createUser(input: RegisterInput): Promise<SafeUser> {
-  const registerSchema = createRegisterSchema({
+export async function createUser(input: UserServerCreate): Promise<SafeUser> {
+  const registerSchema = userServerCreateSchema({
     minNameLength: config.NAME_MIN_LENGTH,
     minPasswordLength: config.PASSWORD_MIN_LENGTH,
   })
@@ -70,7 +72,7 @@ export async function loginUser({ email, password }: { email: string; password: 
 export async function getUser(userId: number): Promise<SafeUser> {
   const user: SafeUser | null = await prisma.user.findUnique({
     where: { userId },
-    select: { userId: true, email: true, name: true, createdAt: true, updatedAt: true },
+    select: { userId: true, email: true, name: true, createdAt: true, updatedAt: true, isConfirmed: true },
   })
 
   if (!user) {
@@ -78,4 +80,38 @@ export async function getUser(userId: number): Promise<SafeUser> {
   }
   serviceLog.debug(`Fetched user: ${JSON.stringify(user)}`)
   return user
+}
+
+export async function sendConfirmation(userId: number): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { userId } })
+  if (!user) {
+    throw new NotFoundError('User not found')
+  }
+  if (user.isConfirmed) {
+    logger.warn(`Confirmed user ${user.email} attempted to resend confirmation`)
+    throw new NotFoundError('User not found')
+  }
+
+  const confirmation = crypto.createHash('md5').update(user.createdAt.toString()).digest('hex')
+  await sendConfirmationEmail(user.email, confirmation)
+  console.log(
+    `Send email to ${user.email} with url ${config.FRONTEND_URL}confirm?email=${user.email}&token=${confirmation}`
+  )
+  return true
+}
+
+export async function getConfirmation(email: string, token: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({ where: { email } })
+  if (!user) {
+    throw new NotFoundError('User not found')
+  }
+
+  const confirmation = crypto.createHash('md5').update(user.createdAt.toString()).digest('hex')
+  if (user.isConfirmed || confirmation !== token) {
+    logger.warn(`Potential attempt to get invalid confirmation for ${email}`)
+    throw new NotFoundError('User not found')
+  }
+  await prisma.user.update({ where: { userId: user.userId }, data: { isConfirmed: true } })
+  serviceLog.debug(`Confirmed token for ${user.email}`)
+  return true
 }

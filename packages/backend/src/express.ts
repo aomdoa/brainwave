@@ -6,7 +6,7 @@ import cors from 'cors'
 import { config } from './utils/config'
 import logger from './utils/logger'
 import { AppError } from './utils/error'
-import { registerAuthRoutes } from './routes/auth.route'
+import { registerUserRoutes } from './routes/user.route'
 import { registerHealthRoutes } from './routes/health.route'
 import { registerThoughtRoutes } from './routes/thought.route'
 import { registerTagRoutes } from './routes/tag.route'
@@ -61,7 +61,7 @@ export function initialize(): Express {
   }
 
   // Register routes
-  app.use('/auth', registerAuthRoutes())
+  app.use('/user', registerUserRoutes())
   app.use('/thoughts', registerThoughtRoutes())
   app.use('/thoughts', registerThoughtTagRoutes())
   app.use('/thoughts', registerThoughtRelationRoutes())

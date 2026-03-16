@@ -1,12 +1,10 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import axios, { type AxiosResponse } from 'axios'
+import axios, { AxiosError, type AxiosResponse } from 'axios'
 import config from './utils/config'
 import { router } from './router'
 import type {
-  RegisterConfig,
-  RegisterInput,
   SearchClientSchema,
   SearchLinks,
   SearchPage,
@@ -20,6 +18,8 @@ import type {
   ThoughtSearchResults,
   ThoughtSimplifiedRelation,
   ThoughtStatus,
+  UserClientCreate,
+  UserConfig,
 } from '@brainwave/shared'
 import type { User } from './store/user.store'
 
@@ -36,10 +36,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const status = error.response?.status
-    if (status === 401 || status === 403 || status === 404) {
-      localStorage.removeItem('token')
-      return router.push('/login')
+    const token = localStorage.getItem('token')
+    if (token != null) {
+      const status = error.response?.status
+      if (status === 401 || status === 403 || status === 404) {
+        localStorage.removeItem('token')
+        return router.push('/login')
+      }
     }
     return Promise.reject(error)
   }
@@ -79,12 +82,17 @@ export function buildSearchQuery(params: SearchClientSchema): URLSearchParams {
 
 // Perform the login request, store the token, and return the user info
 export async function login(email: string, password: string): Promise<User> {
-  const response = await api.post('/auth/login', { email, password })
-  const data = response.data as { token: string }
-  if (!data.token) {
-    throw new Error('Login failed: missing token in response')
+  try {
+    const response = await api.post<{ token: string }>('/user/login', { email, password })
+    return updateToken(response.data.token)
+  } catch (err) {
+    const error = err as AxiosError
+    if (error.status === 403) {
+      throw new Error('need confirmation')
+    } else {
+      throw new Error('invalid')
+    }
   }
-  return updateToken(data.token)
 }
 
 export async function updateToken(token: string): Promise<User> {
@@ -94,19 +102,19 @@ export async function updateToken(token: string): Promise<User> {
 
 // Get our user info
 export async function me(): Promise<User> {
-  const response = await api.get('/auth/me')
+  const response = await api.get('/user/me')
   return response.data as User
 }
 
 // Get the authentication config
-export async function getAuthConfig(): Promise<RegisterConfig> {
-  const response = await api.get('/auth/config')
-  return response.data as RegisterConfig
+export async function getAuthConfig(): Promise<UserConfig> {
+  const response = await api.get('/user/config')
+  return response.data as UserConfig
 }
 
 // Register the new user
-export async function registerUser(registration: RegisterInput): Promise<User> {
-  const response = await api.post('/auth/register', registration)
+export async function registerUser(registration: UserClientCreate): Promise<User> {
+  const response = await api.post('/user/register', registration)
   if (response.statusText !== 'OK') {
     throw new Error(`Failed to register user: ${response.data}`)
   }
@@ -227,6 +235,15 @@ export async function subscribeEvents(sub: any): Promise<void> {
   if (response.statusText !== 'Created') {
     throw new Error(`Failed to subscribe to events: ${response.data}`)
   }
+}
+
+export async function confirmAccount(email: string, token: string): Promise<boolean> {
+  const response = await api.get(`user/getConfirmation?email=${email}&token=${token}`)
+  if (response.statusText !== 'OK') {
+    throw new Error(`Unable to confirm account: ${response.data}`)
+  }
+  console.dir(response.data)
+  return true
 }
 
 // Report error

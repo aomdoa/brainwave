@@ -10,6 +10,12 @@ Contains two prjects (packages/backend and packages/frontend) to provide the ful
 
 To help support the build and usage of the @brainwave/shared I recommend using verdaccio to provide a simple local repo to help test local development changes. Simply install it globally and follow their https://www.verdaccio.org/ instructions for the setup.
 
+### Production Services
+
+- https://console.kamatera.com/servers (server)
+- https://www.namespro.ca/MyAccount.asp (DNS and email)
+- https://console.cloud.google.com/auth/overview (google auth)
+
 ## Backend
 
 The backend is deployed with only exposure for the API portion of the service which is used by the UI for proper, safe and secure data access and changes.

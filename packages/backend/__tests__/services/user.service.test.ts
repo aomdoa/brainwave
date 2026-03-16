@@ -31,6 +31,7 @@ describe('user.service', () => {
     email: input.email,
     createdAt: date,
     updatedAt: date,
+    isConfirmed: true,
   }
 
   let mockPrisma: DeepMockProxy<PrismaClient>
@@ -103,7 +104,7 @@ describe('user.service', () => {
       expect(user).toEqual(output)
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
         where: { userId: 1 },
-        select: { userId: true, email: true, name: true, createdAt: true, updatedAt: true },
+        select: { userId: true, email: true, isConfirmed: true, name: true, createdAt: true, updatedAt: true },
       })
     })
 
