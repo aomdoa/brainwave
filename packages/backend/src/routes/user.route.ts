@@ -2,11 +2,11 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { Router } from 'express'
-import { createUser, getConfirmation, getUser, loginUser, sendConfirmation } from '../services/user.service'
+import { createUser, getConfirmation, getUser, loginUser, sendConfirmation, updateUser } from '../services/user.service'
 import { signToken } from '../utils/jwt'
 import { authMiddleware, AuthRequest } from '../utils/express'
 import { config } from '../utils/config'
-import { UserConfig } from '@brainwave/shared'
+import { UserConfig, UserServerUpdate } from '@brainwave/shared'
 import passport from '../utils/passport'
 import { ForbiddenError } from '../utils/error'
 
@@ -18,9 +18,9 @@ export function registerUserRoutes(): Router {
     try {
       const user = await createUser(req.body)
       await sendConfirmation(user.userId)
-      return res.json(user)
+      res.json(user)
     } catch (err) {
-      return next(err)
+      next(err)
     }
   })
 
@@ -33,9 +33,9 @@ export function registerUserRoutes(): Router {
         throw new ForbiddenError('Please completed account validation')
       }
       const token = signToken({ userId: user.userId })
-      return res.json({ token })
+      res.json({ token })
     } catch (err) {
-      return next(err)
+      next(err)
     }
   })
 
@@ -44,9 +44,9 @@ export function registerUserRoutes(): Router {
       const email = (req.query.email as string) ?? ''
       const confirmation = (req.query.token as string) ?? ''
       const confirmed = await getConfirmation(email, confirmation)
-      return res.json({ confirmed })
+      res.json({ confirmed })
     } catch (err) {
-      return next(err)
+      next(err)
     }
   })
 
@@ -55,7 +55,7 @@ export function registerUserRoutes(): Router {
       minNameLength: config.NAME_MIN_LENGTH,
       minPasswordLength: config.PASSWORD_MIN_LENGTH,
     } as UserConfig
-    return res.json(registerConfig)
+    res.json(registerConfig)
   })
 
   router.get(
@@ -79,7 +79,7 @@ export function registerUserRoutes(): Router {
         </script>
       `)
     } catch (err) {
-      return next(err)
+      next(err)
     }
   })
 
@@ -87,18 +87,32 @@ export function registerUserRoutes(): Router {
   router.get('/me', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
       const user = await getUser(req.userId ?? 0)
-      return res.json({ ...user })
+      res.json({ ...user })
     } catch (err) {
-      return next(err)
+      next(err)
     }
   })
 
   router.post('/sendConfirmation', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
       await sendConfirmation(req.userId ?? 0)
-      return res.json({ status: 'sent' })
+      res.json({ status: 'sent' })
     } catch (err) {
-      return next(err)
+      next(err)
+    }
+  })
+
+  router.patch('/me', authMiddleware, async (req: AuthRequest, res, next) => {
+    try {
+      const userData = {
+        userId: req.userId,
+        ...req.body,
+      } as UserServerUpdate
+
+      const user = await updateUser(userData)
+      res.json({ ...user })
+    } catch (err) {
+      next(err)
     }
   })
 

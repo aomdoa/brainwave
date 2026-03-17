@@ -31,7 +31,6 @@ export function registerSubscribeRoutes(): Router {
   router.post('/subscribe', authMiddleware, (req, res, next) => {
     try {
       const sub = req.body
-      console.dir(sub)
       subscriptions.push(sub)
       res.status(201).json({})
     } catch (err) {

@@ -35,7 +35,7 @@ export const userBaseCreateSchema = (config: UserConfig) =>
       confirmPassword: z.string(),
       isConfirmed: z.boolean().optional(),
     })
-    .refine((data) => data.password != null && data.password === data.confirmPassword, {
+    .refine((data) => data.password === data.confirmPassword, {
       message: 'Passwords do not match',
       path: ['confirmPassword'],
     })
@@ -45,7 +45,19 @@ export type UserServerCreate = z.infer<ReturnType<typeof userServerCreateSchema>
 export type UserClientCreate = z.infer<ReturnType<typeof userClientCreateSchema>>
 
 // update of the users
-export const userBaseUpdateSchema = userBaseCreateSchema
+export const userBaseUpdateSchema = (config: UserConfig) =>
+  z
+    .object({
+      name: z.string().min(config.minNameLength).optional(),
+      email: z.email().optional(),
+      password: z.string().min(config.minPasswordLength).optional(),
+      confirmPassword: z.string().optional(),
+      isConfirmed: z.boolean().optional(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: 'Passwords do not match',
+      path: ['confirmPassword'],
+    })
 export const userServerUpdateSchema = (config: UserConfig) =>
   userBaseUpdateSchema(config)
     .extend({

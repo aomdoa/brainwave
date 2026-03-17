@@ -1,12 +1,22 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
+import mockLogger from '../__mocks__/logger'
 import { PrismaClient } from '@prisma/client'
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended'
 import { prisma } from '../../src/utils/prisma'
-import { createUser, getUser, loginUser } from '../../src/services/user.service'
+import {
+  createUser,
+  getConfirmation,
+  getUser,
+  loginUser,
+  sendConfirmation,
+  updateUser,
+} from '../../src/services/user.service'
 import { ConflictError, NotFoundError, ValidationError } from '../../src/utils/error'
+import { sendConfirmationEmail } from '../../src/utils/email'
 import bcrypt from 'bcryptjs'
+import logger from '../../src/utils/logger'
 
 jest.mock('../../src/utils/prisma', () => ({
   prisma: mockDeep<PrismaClient>(),
@@ -15,6 +25,15 @@ jest.mock('../../src/utils/prisma', () => ({
 jest.mock('bcryptjs', () => ({
   ...jest.requireActual('bcryptjs'),
   compareSync: jest.fn(),
+}))
+
+jest.mock('../../src/utils/email', () => ({
+  sendConfirmationEmail: jest.fn(),
+}))
+
+jest.mock('../../src/utils/logger', () => ({
+  __esModule: true,
+  default: mockLogger,
 }))
 
 describe('user.service', () => {
@@ -111,6 +130,92 @@ describe('user.service', () => {
     it('missing user', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null)
       await expect(getUser(1)).rejects.toThrow(NotFoundError)
+    })
+  })
+
+  describe('sendConfirmation', () => {
+    it('proper sending', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ ...output, isConfirmed: false } as any)
+      const mockSendConfirmationEmail = sendConfirmationEmail as jest.Mock
+      mockSendConfirmationEmail.mockResolvedValue({})
+      const result = await sendConfirmation(1)
+      expect(result).toBeTruthy()
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Send email to email@email.com with url https://localhost:5173/confirm?email=email@email.com&token=9bd8af670f2eea9b5039cf9cffae0005'
+      )
+    })
+
+    it('no user found', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null)
+      expect(sendConfirmation(1)).rejects.toThrow(NotFoundError)
+    })
+
+    it('user is already confirmed', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(output as any)
+      await expect(sendConfirmation(1)).rejects.toThrow(NotFoundError)
+      expect(mockLogger.warn).toHaveBeenCalledWith('Confirmed user email@email.com attempted to resend confirmation')
+    })
+  })
+
+  describe('getConfirmation', () => {
+    it('proper validation', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ ...output, isConfirmed: false } as any)
+      mockPrisma.user.update.mockResolvedValue(output as any)
+      const result = await getConfirmation('email@email.com', '9bd8af670f2eea9b5039cf9cffae0005')
+      expect(result).toBeTruthy()
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({ where: { email: 'email@email.com' } })
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({ data: { isConfirmed: true }, where: { userId: 1 } })
+    })
+
+    it('no user found', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null)
+      await expect(getConfirmation('notexist@email.com', 'code')).rejects.toThrow(NotFoundError)
+    })
+
+    it('user is already confirmed', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(output as any)
+      await expect(getConfirmation('email@email.com', 'confirmation')).rejects.toThrow(NotFoundError)
+      expect(mockLogger.warn).toHaveBeenCalledWith('Potential attempt to get invalid confirmation for email@email.com')
+    })
+  })
+
+  describe('updateUser', () => {
+    it('full user update', async () => {
+      const update = { userId: 1, ...input }
+      mockPrisma.user.findUnique.mockResolvedValue(output as any)
+      mockPrisma.user.update.mockResolvedValue(output as any)
+      const user = await updateUser(update)
+      expect(+user.updatedAt).toBeGreaterThan(+date)
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({ where: { userId: 1 } })
+      expect(mockPrisma.user.update).toHaveBeenLastCalledWith({
+        where: { userId: 1 },
+        data: expect.objectContaining({
+          email: 'email@email.com',
+          isConfirmed: false,
+          name: 'user name',
+        }),
+      })
+    })
+
+    it('no update', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(output as any)
+      mockPrisma.user.update.mockResolvedValue(output as any)
+      const user = await updateUser({ userId: 1 })
+      expect(+user.updatedAt).toBeGreaterThan(+date)
+      expect(mockPrisma.user.update).toHaveBeenLastCalledWith({
+        where: { userId: 1 },
+        data: expect.objectContaining({
+          email: 'email@email.com',
+          isConfirmed: false,
+          name: 'user name',
+        }),
+      })
+    })
+
+    it('no access', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null)
+      await expect(updateUser({ name: '1' } as any)).rejects.toThrow(ValidationError)
+      await expect(updateUser({ userId: 1 })).rejects.toThrow(NotFoundError)
     })
   })
 })
