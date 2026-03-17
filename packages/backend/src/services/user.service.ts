@@ -7,7 +7,12 @@ import { prisma } from '../utils/prisma'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import logger from '../utils/logger'
-import { type UserServerCreate, userServerCreateSchema } from '@brainwave/shared'
+import {
+  type UserServerCreate,
+  userServerCreateSchema,
+  UserServerUpdate,
+  userServerUpdateSchema,
+} from '@brainwave/shared'
 import { config } from '../utils/config'
 import { sendConfirmationEmail } from '../utils/email'
 
@@ -18,6 +23,13 @@ function toSafeUser(user: User): SafeUser {
   // eslint-disable-next-line no-unused-vars
   const { password, ...safeUser } = user
   return safeUser
+}
+
+function getSchemaConfig() {
+  return {
+    minNameLength: config.NAME_MIN_LENGTH,
+    minPasswordLength: config.PASSWORD_MIN_LENGTH,
+  }
 }
 
 export async function createUser(input: UserServerCreate): Promise<SafeUser> {
@@ -88,13 +100,13 @@ export async function sendConfirmation(userId: number): Promise<boolean> {
     throw new NotFoundError('User not found')
   }
   if (user.isConfirmed) {
-    logger.warn(`Confirmed user ${user.email} attempted to resend confirmation`)
+    serviceLog.warn(`Confirmed user ${user.email} attempted to resend confirmation`)
     throw new NotFoundError('User not found')
   }
 
   const confirmation = crypto.createHash('md5').update(user.createdAt.toString()).digest('hex')
   await sendConfirmationEmail(user.email, confirmation)
-  console.log(
+  serviceLog.debug(
     `Send email to ${user.email} with url ${config.FRONTEND_URL}confirm?email=${user.email}&token=${confirmation}`
   )
   return true
@@ -108,10 +120,42 @@ export async function getConfirmation(email: string, token: string): Promise<boo
 
   const confirmation = crypto.createHash('md5').update(user.createdAt.toString()).digest('hex')
   if (user.isConfirmed || confirmation !== token) {
-    logger.warn(`Potential attempt to get invalid confirmation for ${email}`)
+    serviceLog.warn(`Potential attempt to get invalid confirmation for ${email}`)
     throw new NotFoundError('User not found')
   }
   await prisma.user.update({ where: { userId: user.userId }, data: { isConfirmed: true } })
   serviceLog.debug(`Confirmed token for ${user.email}`)
   return true
+}
+
+export async function updateUser(userData: UserServerUpdate): Promise<SafeUser> {
+  const schema = userServerUpdateSchema(getSchemaConfig())
+  const parsed = schema.safeParse(userData)
+  if (!parsed.success) {
+    throw new ValidationError('Invalid input', parsed.error)
+  }
+  const user = await prisma.user.findUnique({ where: { userId: parsed.data.userId } })
+  if (user == null) {
+    throw new NotFoundError('User not found')
+  }
+  user.updatedAt = new Date()
+  if (parsed.data.email != null) {
+    user.email = parsed.data.email
+    user.isConfirmed = false
+    serviceLog.debug(`Updating user ${user.userId} with new email ${user.email}`)
+  }
+  if (parsed.data.password != null) {
+    const salt = bcrypt.genSaltSync(10)
+    const hashed = bcrypt.hashSync(parsed.data.password, salt)
+    user.password = hashed
+    serviceLog.debug(`Updating user ${user.userId} with new password`)
+  }
+  if (parsed.data.name != null) {
+    user.name = parsed.data.name
+    serviceLog.debug(`Updated user ${user.userId} with new name ${user.name}`)
+  }
+  const { userId, ...updateData } = user
+  const updatedUser = await prisma.user.update({ where: { userId }, data: updateData })
+  serviceLog.debug(`Updated user ${user.userId}`)
+  return toSafeUser(updatedUser)
 }

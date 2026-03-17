@@ -39,6 +39,11 @@ describe('history.service', () => {
 
       expect(result).toEqual(mockHistory)
     })
+
+    it('ensure nothing done if body is empty', async () => {
+      const result = await createHistory(2, '')
+      expect(result).toBeNull()
+    })
   })
 
   describe('getHistory', () => {

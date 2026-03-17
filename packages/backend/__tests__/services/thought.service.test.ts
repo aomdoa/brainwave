@@ -18,6 +18,7 @@ import {
 } from '../../src/services/thought.service'
 import { baseThought, date, makeTag, makeTags, makeThought } from '../data.factory'
 import { getTag, getTagsByIds } from '../../src/services/tag.service'
+import { createHistory } from '../../src/services/history.service'
 import { NotFoundError, ValidationError } from '../../src/utils/error'
 
 jest.mock('../../src/utils/prisma', () => ({
@@ -28,6 +29,10 @@ jest.mock('../../src/utils/prisma', () => ({
 jest.mock('../../src/services/tag.service', () => ({
   getTagsByIds: jest.fn(),
   getTag: jest.fn(),
+}))
+
+jest.mock('../../src/services/history.service', () => ({
+  createHistory: jest.fn(),
 }))
 
 describe('thought.service', () => {
@@ -100,6 +105,23 @@ describe('thought.service', () => {
 
       await expect(updateThought(bad as any)).rejects.toThrow(ValidationError)
       expect(mockPrisma.thought.update).not.toHaveBeenCalled()
+    })
+
+    it('update thought body', async () => {
+      const bodyInput = { ...baseThought, body: 'Updated body...' }
+      mockPrisma.thought.update.mockResolvedValue(bodyInput)
+      mockPrisma.thought.findUnique.mockResolvedValue(baseThought)
+      const mockCreateHistory = createHistory as jest.Mock
+      mockCreateHistory.mockResolvedValue(null)
+      const result = await updateThought({ thoughtId: 1, userId: 10, body: 'Updated body...' })
+
+      expect(mockPrisma.thought.update).toHaveBeenCalledWith({
+        where: { thoughtId: input.thoughtId, userId: input.userId },
+        data: expect.objectContaining({ body: 'Updated body...' }),
+      })
+      expect(mockCreateHistory).toHaveBeenCalledWith(1, 'Test body')
+
+      expect(result).toEqual(bodyInput)
     })
   })
 

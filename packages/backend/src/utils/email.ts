@@ -47,8 +47,8 @@ export async function sendConfirmationEmail(to: string, token: string) {
   const html = `Please confirm your brainwave account by going to <a href="${link}">${link}</a>`
   const info = await transporter.sendMail({ from, to, subject, text, html })
   if (process.env.NODE_ENV === 'development') {
-    console.log('Preview URL:', nodemailer.getTestMessageUrl(info))
+    serviceLog.debug(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`)
   }
-  console.dir(info)
+  serviceLog.debug(`Email to ${to}: ${JSON.stringify(info)}`)
   return info
 }

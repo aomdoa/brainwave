@@ -61,7 +61,9 @@ export function initialize(): Express {
   }
 
   // Register routes
-  app.use('/user', registerUserRoutes())
+  const userRoutes = registerUserRoutes()
+  app.use('/user', userRoutes)
+  app.use('/auth', userRoutes) // google is stuck with auth for some reason?
   app.use('/thoughts', registerThoughtRoutes())
   app.use('/thoughts', registerThoughtTagRoutes())
   app.use('/thoughts', registerThoughtRelationRoutes())
