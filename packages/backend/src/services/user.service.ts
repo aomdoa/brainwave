@@ -105,11 +105,17 @@ export async function sendConfirmation(userId: number): Promise<boolean> {
   }
 
   const confirmation = crypto.createHash('md5').update(user.createdAt.toString()).digest('hex')
-  await sendConfirmationEmail(user.email, confirmation)
-  serviceLog.debug(
-    `Send email to ${user.email} with url ${config.FRONTEND_URL}confirm?email=${user.email}&token=${confirmation}`
-  )
-  return true
+  try {
+    await sendConfirmationEmail(user.email, confirmation)
+    serviceLog.debug(
+      `Send email to ${user.email} with url ${config.FRONTEND_URL}confirm?email=${user.email}&token=${confirmation}`
+    )
+    return true
+  } catch (err) {
+    const error = err as Error
+    serviceLog.warn(`Unable to send email for ${user.userId} to ${user.email}: ${error.message}`)
+    return false
+  }
 }
 
 export async function getConfirmation(email: string, token: string): Promise<boolean> {
