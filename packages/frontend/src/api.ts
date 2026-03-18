@@ -18,7 +18,9 @@ import type {
   ThoughtSearchResults,
   ThoughtSimplifiedRelation,
   ThoughtStatus,
+  UserClient,
   UserClientCreate,
+  UserClientUpdate,
   UserConfig,
 } from '@brainwave/shared'
 import type { User } from './store/user.store'
@@ -102,8 +104,11 @@ export async function updateToken(token: string): Promise<User> {
 
 // Get our user info
 export async function me(): Promise<User> {
-  const response = await api.get('/user/me')
-  return response.data as User
+  const response = await api.get<User>('/user/me')
+  if (response.statusText !== 'OK') {
+    throw new Error(`Failed to get user: ${response.data}`)
+  }
+  return response.data
 }
 
 // Get the authentication config
@@ -242,8 +247,15 @@ export async function confirmAccount(email: string, token: string): Promise<bool
   if (response.statusText !== 'OK') {
     throw new Error(`Unable to confirm account: ${response.data}`)
   }
-  console.dir(response.data)
   return true
+}
+
+export async function updateUser(user: UserClientUpdate): Promise<UserClient> {
+  const response = await api.patch<UserClient>(`user/me`, user)
+  if (response.statusText !== 'OK') {
+    throw new Error(`Unable to update user: ${response.data}`)
+  }
+  return response.data
 }
 
 // Report error

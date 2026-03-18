@@ -32,16 +32,23 @@ export function logout() {
   currentUser.value = null
 }
 
+export async function loadCurrentUser(force = false) {
+  if (!isAuthenticated()) return null
+
+  if (!currentUser.value || force) {
+    const data = await me()
+    data.isSubscribed = await isSubscribed()
+    currentUser.value = data
+  }
+
+  return currentUser.value
+}
+
 export function isAuthenticated(): boolean {
   const token = localStorage.getItem('token')
   if (token) {
-    if (currentUser.value == null) {
-      me().then(async (data) => {
-        data.isSubscribed = await isSubscribed()
-        currentUser.value = data
-      })
-    }
     return true
+  } else {
+    return false
   }
-  return false
 }

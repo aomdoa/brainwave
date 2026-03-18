@@ -108,3 +108,8 @@ button:focus-visible {
   outline-color: transparent;
   box-shadow: var(--p-multiselect-shadow);
 }
+
+.warning {
+  font-size: xx-small;
+  color: orangered;
+}

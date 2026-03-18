@@ -8,6 +8,7 @@ import RegisterPage from '../components/Register.vue'
 import ErrorPage from '../components/Error.vue'
 import Thought from '../components/Thought.vue'
 import Confirm from '../components/Confirm.vue'
+import User from '../components/User.vue'
 import { isAuthenticated } from '../store/user.store'
 
 const routes: RouteRecordRaw[] = [
@@ -22,6 +23,7 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   { path: '/thoughts/:thoughtId?', component: Thought, meta: { requiresAuth: true } },
+  { path: '/user', component: User, meta: { requiresAuth: true } },
 ]
 
 export const router = createRouter({

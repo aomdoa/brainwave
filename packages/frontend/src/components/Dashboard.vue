@@ -8,7 +8,7 @@ import { type TagClient, type ThoughtClient } from '@brainwave/shared'
 import { getTags, getThoughts } from '../api'
 import { router } from '../router'
 import dayjs from 'dayjs'
-import { currentUser } from '../store/user.store'
+import { currentUser, loadCurrentUser } from '../store/user.store'
 
 let tags: TagClient[] = []
 const pageSize = 20
@@ -107,6 +107,7 @@ const fetchThoughts = async () => {
 }
 
 onMounted(async () => {
+  await loadCurrentUser()
   tags = await getTags()
   await fetchThoughts()
 })

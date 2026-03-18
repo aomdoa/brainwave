@@ -106,7 +106,10 @@ const register = async () => {
         {{ errors.server }}
       </div>
       <div class="form-group actions">
-        <button type="submit">Register</button>
+        <button type="button" @click="router.back()">Back</button>
+        <div style="margin-left: auto">
+          <button type="submit">Register</button>
+        </div>
       </div>
     </form>
   </div>
