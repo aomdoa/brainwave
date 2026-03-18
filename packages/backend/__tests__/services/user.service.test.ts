@@ -155,6 +155,15 @@ describe('user.service', () => {
       await expect(sendConfirmation(1)).rejects.toThrow(NotFoundError)
       expect(mockLogger.warn).toHaveBeenCalledWith('Confirmed user email@email.com attempted to resend confirmation')
     })
+
+    it('failed to send', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ ...output, isConfirmed: false } as any)
+      const mockSendConfirmationEmail = sendConfirmationEmail as jest.Mock
+      mockSendConfirmationEmail.mockRejectedValue(new Error('failed'))
+      const result = await sendConfirmation(1)
+      expect(result).toBeFalsy()
+      expect(mockLogger.warn).toHaveBeenCalledWith('Unable to send email for 1 to email@email.com: failed')
+    })
   })
 
   describe('getConfirmation', () => {

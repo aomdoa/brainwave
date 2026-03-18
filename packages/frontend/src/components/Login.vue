@@ -78,13 +78,17 @@ const loginWithGoogle = () => {
       <label for="password">Password: </label>
       <input id="password" v-model="password" type="password" />
     </div>
+    <div class="form-group actions"></div>
     <div class="form-group actions">
-      <button id="login" type="submit" :disabled="isProcessing">{{ isProcessing ? 'Logging in...' : 'Login' }}</button>
+      <button type="button" @click="loginWithGoogle">Sign in with Google</button>
+
+      <div style="margin-left: auto">
+        <button id="login" type="submit" :disabled="isProcessing">
+          {{ isProcessing ? 'Logging in...' : 'Login' }}
+        </button>
+      </div>
     </div>
   </form>
-  <div class="oauth">
-    <button type="button" @click="loginWithGoogle">Sign in with Google</button>
-  </div>
   <router-link to="/register">
     Don't have an account? Register <span style="text-decoration: underline">here</span>.
   </router-link>
