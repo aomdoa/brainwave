@@ -19,6 +19,7 @@ model User {
   // Relations
   thoughts      Thought[]      @relation("ThoughtToUser")
   tags          Tag[]          @relation("UserToTag")
+  subscriptions Subscription[] @relation("UserToSubscription")
   oAuth         UserOAuth[]    @relation("UserToOAuth")
 }
 
@@ -106,6 +107,21 @@ model ThoughtRelation {
   @@unique([thoughtOneId, thoughtTwoId])
   @@index([thoughtOneId])
   @@index([thoughtTwoId])
+}
+
+model Subscription {
+  subscriptionId  Int @id @default(autoincrement())
+  userId          Int
+  endpoint        String
+  p256dh          String
+  auth            String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relations
+  user   User @relation("UserToSubscription", fields: [userId], references: [userId], onDelete: Cascade)
+  @@unique([endpoint])
+  @@index([userId])
 }
 
 enum Status {

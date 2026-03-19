@@ -39,7 +39,6 @@ export async function pwaConfigure(reg: ServiceWorkerRegistration | undefined) {
   }
   const permission = await Notification.requestPermission()
   if (permission === 'granted') {
-    console.log('subscribed')
     await subscribeUser(reg)
   }
 }

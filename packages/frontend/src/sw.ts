@@ -5,19 +5,15 @@ const manifest = self.__WB_MANIFEST || []
 precacheAndRoute(manifest)
 
 self.addEventListener('install', (event: ExtendableEvent) => {
-  console.log('install')
   self.skipWaiting()
 })
 
 self.addEventListener('activate', (event: ExtendableEvent) => {
-  console.log('activate')
   event.waitUntil(self.clients.claim())
 })
 
 self.addEventListener('push', (event: PushEvent) => {
-  console.log('push')
-  console.dir(event)
-  let data = { title: 'Brainwave', body: 'Push received' }
+  let data = { title: 'Brainwave Notification', body: 'Update', data: { url: '/thoughts' } }
 
   if (event.data) {
     try {
@@ -31,6 +27,12 @@ self.addEventListener('push', (event: PushEvent) => {
     self.registration.showNotification(data.title, {
       body: data.body,
       icon: '/icons/brainwave-192.png',
+      data: data.data || { url: '/' },
     })
   )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  const url = event.notification.data?.url
+  event.waitUntil(clients.openWindow(url))
 })
