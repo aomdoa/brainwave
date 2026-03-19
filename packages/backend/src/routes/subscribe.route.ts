@@ -2,8 +2,9 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { Router } from 'express'
-import { authMiddleware } from '../utils/express'
+import { authMiddleware, AuthRequest } from '../utils/express'
 import webpush from '../utils/webpush'
+import { sendNotifications, updateSubscription } from '../services/subscribe.service'
 
 export const subscriptions: any[] = []
 
@@ -11,28 +12,20 @@ export function registerSubscribeRoutes(): Router {
   const router = Router()
 
   router.post('/test', async (req, res, next) => {
-    const payload = {
-      title: 'Brainwave Dev',
-      body: 'Server push working!',
-    }
     try {
-      const results = await Promise.all(
-        subscriptions.map((sub) => webpush.sendNotification(sub, JSON.stringify(payload)))
-      )
-      console.dir(results)
-      res.json({ success: true })
+      await sendNotifications()
+      res.status(200).json({ status: 'done' })
     } catch (err) {
-      console.dir(err)
       next(err)
     }
   })
 
   // private
-  router.post('/subscribe', authMiddleware, (req, res, next) => {
+  router.post('/subscribe', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
-      const sub = req.body
-      subscriptions.push(sub)
-      res.status(201).json({})
+      const sub = req.body as webpush.PushSubscription
+      const result = await updateSubscription(req.userId ?? 0, sub)
+      res.status(201).json({ status: result })
     } catch (err) {
       next(err)
     }

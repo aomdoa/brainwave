@@ -24,7 +24,6 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
 
   try {
     const payload = jwt.verify(token, config.JWT_SECRET) as { userId: number }
-    console.log(`Payload is ${JSON.stringify(payload)}`)
     req.userId = payload.userId
     return next()
   } catch {

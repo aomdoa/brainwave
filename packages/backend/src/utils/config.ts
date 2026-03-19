@@ -37,6 +37,7 @@ const schema = z.object({
   SMTP_PORT: z.number().default(587),
   SMTP_USER: z.string().default('smtp user'),
   SMTP_PASS: z.string().default('smtp pass'),
+  NOTIFICATION_CRON: z.string().default('04 10 * * *'),
 })
 
 export const config = schema.parse(process.env)
