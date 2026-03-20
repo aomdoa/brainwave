@@ -1,5 +1,6 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
+ * @contributor https://claude.ai
  */
 import { PrismaClient } from '@prisma/client'
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended'
