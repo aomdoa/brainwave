@@ -106,7 +106,6 @@ export function registerUserRoutes(): Router {
 
   router.patch('/me', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
-      console.dir(req.body)
       const userData = {
         userId: req.userId,
         ...req.body,
