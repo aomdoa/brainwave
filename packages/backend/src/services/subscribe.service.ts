@@ -53,14 +53,17 @@ export async function updateSubscription(userId: number, subscription: webpush.P
   return changed
 }
 
-export async function sendNotifications(): Promise<void> {
-  serviceLog.debug('sendNotifications')
-
+export function getToday(): { start: Date; end: Date } {
   const start = new Date()
   start.setUTCHours(0, 0, 0, 0)
   const end = new Date()
   end.setUTCHours(23, 59, 59, 999)
+  return { start, end }
+}
 
+export async function sendNotifications(): Promise<void> {
+  serviceLog.debug('sendNotifications')
+  const { start, end } = getToday()
   const thoughts = await prisma.thought.findMany({
     where: {
       nextReminder: {

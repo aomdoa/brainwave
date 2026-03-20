@@ -32,7 +32,7 @@ export function registerUserRoutes(): Router {
         await sendConfirmation(user.userId)
         throw new ForbiddenError('Please completed account validation')
       }
-      const token = signToken({ userId: user.userId })
+      const token = signToken({ userId: user.userId }, user.authLength ?? config.JWT_EXPIRES_IN)
       res.json({ token })
     } catch (err) {
       next(err)
@@ -68,7 +68,9 @@ export function registerUserRoutes(): Router {
 
   router.get('/google/callback', passport.authenticate('google', { session: false }), async (req: any, res, next) => {
     try {
-      const token = signToken({ userId: req.user.userId })
+      const userId = req.user.userId
+      const user = await getUser(userId)
+      const token = signToken({ userId }, user.authLength ?? config.JWT_EXPIRES_IN)
       res.send(`
         <script>
           window.opener.postMessage(

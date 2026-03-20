@@ -2,9 +2,8 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import express, { NextFunction, Response } from 'express'
-import jwt from 'jsonwebtoken'
 import { ForbiddenError, ValidationError } from './error'
-import config from './config'
+import { verifyToken } from './jwt'
 
 export interface AuthRequest extends express.Request {
   userId?: number
@@ -23,8 +22,7 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
   }
 
   try {
-    const payload = jwt.verify(token, config.JWT_SECRET) as { userId: number }
-    req.userId = payload.userId
+    req.userId = verifyToken(token)
     return next()
   } catch {
     throw new ForbiddenError('Invalid token')
