@@ -8,6 +8,9 @@ export interface UserConfig {
   minPasswordLength: number
 }
 
+export const userAuthLength = ['1h', '6h', '1d', '7d', '30d'] as const
+export type UserValidLength = (typeof userAuthLength)[number]
+
 // core users
 export const userBaseSchema = z.object({
   name: z.string(),
@@ -15,6 +18,7 @@ export const userBaseSchema = z.object({
   isConfirmed: z.boolean().default(false),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  authLength: z.enum(userAuthLength),
 })
 export const userServerSchema = userBaseSchema
   .extend({
@@ -34,6 +38,7 @@ export const userBaseCreateSchema = (config: UserConfig) =>
       password: z.string().min(config.minPasswordLength),
       confirmPassword: z.string(),
       isConfirmed: z.boolean().optional(),
+      authLength: z.enum(userAuthLength).optional().default('6h'),
     })
     .refine((data) => data.password === data.confirmPassword, {
       message: 'Passwords do not match',
@@ -53,6 +58,7 @@ export const userBaseUpdateSchema = (config: UserConfig) =>
       password: z.string().min(config.minPasswordLength).optional(),
       confirmPassword: z.string().optional(),
       isConfirmed: z.boolean().optional(),
+      authLength: z.enum(userAuthLength).default('6h'),
     })
     .refine((data) => data.password === data.confirmPassword, {
       message: 'Passwords do not match',

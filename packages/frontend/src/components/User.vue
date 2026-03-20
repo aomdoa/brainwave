@@ -3,16 +3,17 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { ref, onMounted, watch, computed } from 'vue'
-import { userClientUpdateSchema } from '@brainwave/shared'
+import { userClientUpdateSchema, type UserClientUpdate, userAuthLength } from '@brainwave/shared'
 import { getAuthConfig, updateUser } from '../api'
 import { router } from '../router'
 import { currentUser, loadCurrentUser, logout } from '../store/user.store'
 const form = ref({
   name: '',
   email: '',
+  authLength: '6h',
   password: '',
   confirmPassword: '',
-})
+} as UserClientUpdate)
 const status = ref('loading')
 const schema = ref<ReturnType<typeof userClientUpdateSchema> | null>(null)
 const errors = ref<Record<string, string>>({})
@@ -32,6 +33,7 @@ watch(
       const base = {
         name: user.name,
         email: user.email,
+        authLength: user.authLength,
         password: '',
         confirmPassword: '',
       }
@@ -56,6 +58,7 @@ const userUpdate = async () => {
   const updateValue = {
     name: undefined as string | undefined,
     email: undefined as string | undefined,
+    authLength: undefined as string | undefined,
     password: undefined as string | undefined,
     confirmPassword: undefined as string | undefined,
   }
@@ -66,7 +69,14 @@ const userUpdate = async () => {
     updateValue.email = form.value.email
     doLogout = true
   }
-  if (form.value.password.length > 0 || form.value.confirmPassword.length > 0) {
+  if (form.value.authLength !== originalForm.value.authLength) {
+    updateValue.authLength = form.value.authLength
+  }
+  if (
+    form.value.password != undefined &&
+    form.value.confirmPassword != undefined &&
+    (form.value.password.length > 0 || form.value.confirmPassword.length > 0)
+  ) {
     updateValue.password = form.value.password
     updateValue.confirmPassword = form.value.confirmPassword
   }
@@ -77,6 +87,7 @@ const userUpdate = async () => {
     Object.assign(errors.value, {
       name: fieldErrors.name?.[0] ?? '',
       email: fieldErrors.email?.[0] ?? '',
+      authLength: fieldErrors.authLength?.[0] ?? '',
       password: fieldErrors.password?.[0] ?? '',
       confirmPassword: fieldErrors.confirmPassword?.[0] ?? '',
     })
@@ -119,6 +130,10 @@ const userUpdate = async () => {
       <div v-if="errors.email" class="field-error">
         {{ errors.email }}
       </div>
+    </div>
+    <div class="form-group">
+      <label for="authLength">Login Length: </label>
+      <Select class="length-select" v-model="form.authLength" :options="[...userAuthLength]" />
     </div>
     <div class="form-group">
       <label for="password">Password: </label>

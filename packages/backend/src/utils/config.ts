@@ -23,7 +23,7 @@ const schema = z.object({
   PAGE_SIZE_DEFAULT: z.coerce.number().default(25),
   PAGE_SIZE_MAXIMUM: z.coerce.number().default(100),
   JWT_SECRET: z.string().default('dave'),
-  JWT_EXPIRES_IN: z.string().default('1h'),
+  JWT_EXPIRES_IN: z.string().default('6h'),
   DOCS_BASE: z.string().default('/'),
   GOOGLE_CLIENT_ID: z.string(),
   GOOGLE_CLIENT_SECRET: z.string(),

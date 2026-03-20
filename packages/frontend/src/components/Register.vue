@@ -47,7 +47,7 @@ const register = async () => {
     return
   }
 
-  const user = await registerUser(form.value).catch((err) => {
+  const user = await registerUser(result.data).catch((err) => {
     const status = err.response?.status ?? 400
     if (status === 400) {
       errors.value['server'] = 'Please fix the validation errors and try again'

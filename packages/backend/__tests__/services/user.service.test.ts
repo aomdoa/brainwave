@@ -16,7 +16,7 @@ import {
 import { ConflictError, NotFoundError, ValidationError } from '../../src/utils/error'
 import { sendConfirmationEmail } from '../../src/utils/email'
 import bcrypt from 'bcryptjs'
-import logger from '../../src/utils/logger'
+import { UserValidLength } from '@brainwave/shared'
 
 jest.mock('../../src/utils/prisma', () => ({
   prisma: mockDeep<PrismaClient>(),
@@ -42,6 +42,7 @@ describe('user.service', () => {
     email: 'email@email.com',
     password: 'password',
     confirmPassword: 'password',
+    authLength: '6h' as UserValidLength,
   }
   const date = new Date('2008-12-10T04:03:45.12Z')
   const output = {
@@ -51,6 +52,7 @@ describe('user.service', () => {
     createdAt: date,
     updatedAt: date,
     isConfirmed: true,
+    authLength: '6h',
   }
 
   let mockPrisma: DeepMockProxy<PrismaClient>
@@ -123,7 +125,15 @@ describe('user.service', () => {
       expect(user).toEqual(output)
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
         where: { userId: 1 },
-        select: { userId: true, email: true, isConfirmed: true, name: true, createdAt: true, updatedAt: true },
+        select: {
+          userId: true,
+          email: true,
+          isConfirmed: true,
+          name: true,
+          createdAt: true,
+          updatedAt: true,
+          authLength: true,
+        },
       })
     })
 
@@ -209,7 +219,7 @@ describe('user.service', () => {
     it('no update', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(output as any)
       mockPrisma.user.update.mockResolvedValue(output as any)
-      const user = await updateUser({ userId: 1 })
+      const user = await updateUser({ userId: 1, authLength: '1h' })
       expect(+user.updatedAt).toBeGreaterThan(+date)
       expect(mockPrisma.user.update).toHaveBeenLastCalledWith({
         where: { userId: 1 },
@@ -224,7 +234,7 @@ describe('user.service', () => {
     it('no access', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null)
       await expect(updateUser({ name: '1' } as any)).rejects.toThrow(ValidationError)
-      await expect(updateUser({ userId: 1 })).rejects.toThrow(NotFoundError)
+      await expect(updateUser({ userId: 1, authLength: '1h' })).rejects.toThrow(NotFoundError)
     })
   })
 })

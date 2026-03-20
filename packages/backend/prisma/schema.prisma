@@ -13,6 +13,7 @@ model User {
   email       String   @unique
   password    String?
   isConfirmed Boolean  @default(false)
+  authLength  String   @default("4h")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -115,8 +116,8 @@ model Subscription {
   endpoint        String
   p256dh          String
   auth            String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // relations
   user   User @relation("UserToSubscription", fields: [userId], references: [userId], onDelete: Cascade)

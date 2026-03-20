@@ -84,7 +84,15 @@ export async function loginUser({ email, password }: { email: string; password: 
 export async function getUser(userId: number): Promise<SafeUser> {
   const user: SafeUser | null = await prisma.user.findUnique({
     where: { userId },
-    select: { userId: true, email: true, name: true, createdAt: true, updatedAt: true, isConfirmed: true },
+    select: {
+      userId: true,
+      email: true,
+      name: true,
+      createdAt: true,
+      updatedAt: true,
+      isConfirmed: true,
+      authLength: true,
+    },
   })
 
   if (!user) {
@@ -159,6 +167,10 @@ export async function updateUser(userData: UserServerUpdate): Promise<SafeUser> 
   if (parsed.data.name != null) {
     user.name = parsed.data.name
     serviceLog.debug(`Updated user ${user.userId} with new name ${user.name}`)
+  }
+  if (parsed.data.authLength != null) {
+    user.authLength = parsed.data.authLength
+    serviceLog.debug(`Updated user ${user.userId} with new auth length ${user.authLength}`)
   }
   const { userId, ...updateData } = user
   const updatedUser = await prisma.user.update({ where: { userId }, data: updateData })

@@ -37,7 +37,6 @@ watchEffect(() => {
     </div>
     <div v-if="loggedIn">
       <a v-if="!subscribed" v-on:click="subscribe" class="subscribe">Subscribe</a>
-      <a v-else class="subscribe">Subscribed</a>
       <router-link to="/user" class="user">Me</router-link>
       <a v-on:click="logoutUser" class="logout">Logout</a>
     </div>
