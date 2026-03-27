@@ -349,7 +349,7 @@ onMounted(async () => {
       <div class="form-group actions">
         <button type="button" @click="goBack">Back</button>
         <div style="margin-left: auto">
-          <button v-if="thought.thoughtId != null" type="button" @click="switchStatus" variant="outlined">
+          <button v-if="thought.thoughtId > 0" type="button" @click="switchStatus" variant="outlined">
             {{ thought.status === 'ACTIVE' ? 'Archive' : 'Unarchive' }}
           </button>
           <button style="margin-left: 1em" type="submit">{{ thought.thoughtId > 0 ? 'Update' : 'Create' }}</button>

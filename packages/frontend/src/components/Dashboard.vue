@@ -119,6 +119,7 @@ onMounted(async () => {
     <div class="controls">
       <input type="text" v-model="search" @keyup.enter="onSearch()" placeholder="Search thoughts..." />
       <Select
+        v-if="!isMobile"
         @change="selectionChange"
         class="tag-select"
         v-model="tag"
@@ -129,6 +130,7 @@ onMounted(async () => {
         :title="tag?.name"
       />
       <Select
+        v-if="!isMobile"
         @change="selectionChange"
         class="status-select"
         v-model="selectedStatus"
