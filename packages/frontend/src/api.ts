@@ -105,8 +105,8 @@ export async function updateToken(token: string): Promise<User> {
 // Get our user info
 export async function me(): Promise<User> {
   const response = await api.get<User>('/user/me')
-  if (response.statusText !== 'OK') {
-    throw new Error(`Failed to get user: ${response.data}`)
+  if (response.status !== 200) {
+    throw new Error(`Failed to get user: ${JSON.stringify(response.data)}`)
   }
   return response.data
 }
@@ -120,7 +120,7 @@ export async function getAuthConfig(): Promise<UserConfig> {
 // Register the new user
 export async function registerUser(registration: UserClientCreate): Promise<User> {
   const response = await api.post('/user/register', registration)
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Failed to register user: ${response.data}`)
   }
   return response.data as User
@@ -136,7 +136,7 @@ export async function getThoughts(
   }
 
   const response = await api.get<ThoughtSearchResults>(`/thoughts?${query}`)
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Failed to retrieve thoughts with '${query}': ${response.statusText}`)
   }
   return {
@@ -148,7 +148,7 @@ export async function getThoughts(
 
 export async function getThoughtById(thoughtId: number): Promise<ThoughtClient> {
   const response = await api.get<ThoughtClient>(`thoughts/${thoughtId}`)
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Failed to retrieve thought ${thoughtId}: ${response.data}`)
   }
   return response.data
@@ -162,7 +162,7 @@ export async function saveThought(thought: ThoughtClientCreate | ThoughtClientUp
   } else {
     response = await api.post<ThoughtClient>('thoughts/', thought as ThoughtClientCreate)
   }
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Failed saving thought: ${response.data}`)
   }
   return response.data
@@ -170,7 +170,7 @@ export async function saveThought(thought: ThoughtClientCreate | ThoughtClientUp
 
 export async function setThoughtStatus(thoughtId: number, status: ThoughtStatus): Promise<ThoughtClient> {
   const response = await api.patch<ThoughtClient>(`thoughts/${thoughtId}`, { status })
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Failed to update thought ${thoughtId} to status ${status}: ${response.data}`)
   }
   return response.data
@@ -178,7 +178,7 @@ export async function setThoughtStatus(thoughtId: number, status: ThoughtStatus)
 
 export async function getThoughtConfig(): Promise<ThoughtConfig> {
   const response = await api.get<ThoughtConfig>('/thoughts/config')
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Failed to get the thought config: ${response.data}`)
   }
   return response.data
@@ -186,7 +186,7 @@ export async function getThoughtConfig(): Promise<ThoughtConfig> {
 
 export async function getTags(): Promise<TagClient[]> {
   const response = await api.get<TagClient[]>('/tags')
-  if (!response || response.statusText !== 'OK') {
+  if (!response || response.status !== 200) {
     throw new Error(`Failed to get the tags: ${response.data}`)
   }
   return response.data
@@ -194,7 +194,7 @@ export async function getTags(): Promise<TagClient[]> {
 
 export async function saveTag(name: string): Promise<TagClient> {
   const response = await api.post<TagClient>('/tags', { name })
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Failed to create tag with anem ${name}: ${response.data}`)
   }
   return response.data
@@ -202,7 +202,7 @@ export async function saveTag(name: string): Promise<TagClient> {
 
 export async function saveThoughtTags(thoughtId: number, tagIds: number[]): Promise<ThoughtClient> {
   const response = await api.post<ThoughtClient>(`/thoughts/${thoughtId}/tags`, tagIds)
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Failed to allocated tags ${tagIds} to thought ${thoughtId}: ${response.data}`)
   }
   return response.data
@@ -210,7 +210,7 @@ export async function saveThoughtTags(thoughtId: number, tagIds: number[]): Prom
 
 export async function getThoughtRelations(thoughtId: number): Promise<ThoughtSimplifiedRelation[]> {
   const response = await api.get<ThoughtSimplifiedRelation[]>(`thoughts/${thoughtId}/relations`)
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Failed to get the relations for ${thoughtId}: ${response.data}`)
   }
   return response.data
@@ -221,7 +221,7 @@ export async function saveThoughtRelations(
   relatedThoughtIds: number[]
 ): Promise<ThoughtSimplifiedRelation[]> {
   const response = await api.post<ThoughtSimplifiedRelation[]>(`thoughts/${thoughtId}/relations`, relatedThoughtIds)
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Failed to set the relations for ${thoughtId}: ${response.data}`)
   }
   return response.data
@@ -229,7 +229,7 @@ export async function saveThoughtRelations(
 
 export async function getThoughtHistory(thoughtId: number): Promise<ThoughtHistoryClient[]> {
   const response = await api.get<ThoughtHistoryClient[]>(`thoughts/${thoughtId}/history`)
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Failed to get thought history for ${thoughtId}: ${response.data}`)
   }
   return response.data
@@ -244,7 +244,7 @@ export async function subscribeEvents(sub: any): Promise<void> {
 
 export async function confirmAccount(email: string, token: string): Promise<boolean> {
   const response = await api.get(`user/getConfirmation?email=${email}&token=${token}`)
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Unable to confirm account: ${response.data}`)
   }
   return true
@@ -252,7 +252,7 @@ export async function confirmAccount(email: string, token: string): Promise<bool
 
 export async function updateUser(user: UserClientUpdate): Promise<UserClient> {
   const response = await api.patch<UserClient>(`user/me`, user)
-  if (response.statusText !== 'OK') {
+  if (response.status !== 200) {
     throw new Error(`Unable to update user: ${response.data}`)
   }
   return response.data
