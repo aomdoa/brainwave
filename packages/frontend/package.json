@@ -2,7 +2,7 @@
   "name": "@brainwave/frontend",
   "rpmName": "brainwave-frontend",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "clean": "rimraf ./dist",
@@ -12,7 +12,7 @@
     "package": "node _scripts/package.mjs"
   },
   "dependencies": {
-    "@brainwave/shared": "1.0.0",
+    "@brainwave/shared": "1.0.1",
     "@primeuix/themes": "^2.0.3",
     "@vueuse/core": "^14.2.1",
     "axios": "^1.13.5",

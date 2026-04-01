@@ -1,0 +1,30 @@
+#!/bin/bash
+set -e
+
+FUNCTION_NAME="brainwave-api"
+REGION="ca-central-1"
+
+# Check if function exists
+if aws lambda get-function --function-name $FUNCTION_NAME --region $REGION > /dev/null 2>&1; then
+  echo "Updating existing Lambda..."
+  aws lambda update-function-code \
+    --function-name $FUNCTION_NAME \
+    --zip-file fileb://lambda.zip \
+    --region $REGION
+else
+  echo "Creating new Lambda..."
+
+  # You'll need a role ARN — paste yours here after creating it in IAM
+  ROLE_ARN="arn:aws:iam::YOUR_ACCOUNT_ID:role/brainwave-lambda-role"
+
+  aws lambda create-function \
+    --function-name $FUNCTION_NAME \
+    --runtime nodejs20.x \
+    --role $ROLE_ARN \
+    --handler index.handler \
+    --zip-file fileb://lambda.zip \
+    --region $REGION \
+    --environment "Variables={DYNAMODB_TABLE=brainwave,NAME_MIN_LENGTH=5,PASSWORD_MIN_LENGTH=12}"
+fi
+
+echo "Deploy complete!"

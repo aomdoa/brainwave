@@ -947,6 +947,11 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
+"@brainwave/shared@1.0.0":
+  version "1.0.0"
+  resolved "http://localhost:4873/@brainwave/shared/-/shared-1.0.0.tgz#5f7f9caa50192086551f174a587ad6ff844f7aca"
+  integrity sha512-9VbMJGG30G9tu9B+vajG1C4oiZ6Tkp/1uTfKdWnrVrtZ9SFd38D/m01ndZApTmK3DrMjsIsRGW+2u1ekcVmvrQ==
+
 "@chevrotain/cst-dts-gen@10.5.0":
   version "10.5.0"
   resolved "https://registry.yarnpkg.com/@chevrotain/cst-dts-gen/-/cst-dts-gen-10.5.0.tgz#922ebd8cc59d97241bb01b1b17561a5c1ae0124e"
