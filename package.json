@@ -15,7 +15,7 @@
   },
   "workspaces": [
     "packages/shared",
-    "packages/backend",
+    "packages/backendaws",
     "packages/frontend"
   ],
   "devDependencies": {
