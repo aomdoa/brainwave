@@ -1,28 +1,15 @@
 import { handler } from '../src/index'
 
-// Mimics the shape of a CloudFront event so the handler runs identically to prod
 function makeEvent(method: string, path: string, body?: unknown, token?: string) {
-  const bodyStr = body ? JSON.stringify(body) : ''
+  const bodyStr = body ? JSON.stringify(body) : undefined
   return {
-    Records: [
-      {
-        cf: {
-          request: {
-            method,
-            uri: path,
-            headers: token ? { authorization: [{ key: 'Authorization', value: `Bearer ${token}` }] } : {},
-            body: body
-              ? {
-                  inputTruncated: false,
-                  action: 'read-only',
-                  encoding: 'text',
-                  data: bodyStr,
-                }
-              : undefined,
-          },
-        },
-      },
-    ],
+    requestContext: {
+      http: { method },
+    },
+    rawPath: path,
+    isBase64Encoded: false,
+    body: bodyStr,
+    headers: token ? { authorization: `Bearer ${token}` } : {},
   }
 }
 

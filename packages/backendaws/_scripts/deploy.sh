@@ -9,20 +9,20 @@ if aws lambda get-function --function-name $FUNCTION_NAME --region $REGION > /de
   echo "Updating existing Lambda..."
   aws lambda update-function-code \
     --function-name $FUNCTION_NAME \
-    --zip-file fileb://lambda.zip \
+    --zip-file fileb://build/lambda.zip \
     --region $REGION
 else
   echo "Creating new Lambda..."
 
   # You'll need a role ARN — paste yours here after creating it in IAM
-  ROLE_ARN="arn:aws:iam::YOUR_ACCOUNT_ID:role/brainwave-lambda-role"
+  ROLE_ARN="arn:aws:iam::287946892756:role/brainwave-lambda-role"
 
   aws lambda create-function \
     --function-name $FUNCTION_NAME \
-    --runtime nodejs20.x \
+    --runtime nodejs24.x \
     --role $ROLE_ARN \
     --handler index.handler \
-    --zip-file fileb://lambda.zip \
+    --zip-file fileb://build/lambda.zip \
     --region $REGION \
     --environment "Variables={DYNAMODB_TABLE=brainwave,NAME_MIN_LENGTH=5,PASSWORD_MIN_LENGTH=12}"
 fi

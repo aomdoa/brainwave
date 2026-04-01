@@ -2,7 +2,7 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { QueryCommand } from '@aws-sdk/lib-dynamodb'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import { db, config, error, jwt } from '../shared'
 
 export default async function loginUser({ email, password }: { email: string; password: string }): Promise<string> {

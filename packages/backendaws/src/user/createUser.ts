@@ -2,7 +2,7 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import { ulid } from 'ulid'
 import { userClientSchema, userCreateSchema } from '@brainwave/shared'
 import { config, db, error } from '../shared'

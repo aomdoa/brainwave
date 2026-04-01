@@ -1,30 +1,33 @@
-import { CloudFrontRequestEvent, CloudFrontRequestResult } from 'aws-lambda'
+import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda'
 import { loginUser, createUser, getUser } from './user'
 import { jwt, error } from './shared'
 
-function response(statusCode: number, body: unknown): CloudFrontRequestResult {
+function response(statusCode: number, body: unknown): APIGatewayProxyResultV2 {
   return {
-    status: String(statusCode),
+    statusCode,
     headers: {
-      'content-type': [{ key: 'Content-Type', value: 'application/json' }],
-      'access-control-allow-origin': [{ key: 'Access-Control-Allow-Origin', value: '*' }],
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
     },
     body: JSON.stringify(body),
   }
 }
 
-export async function handler(event: CloudFrontRequestEvent): Promise<CloudFrontRequestResult> {
-  const request = event.Records[0].cf.request
-  const method = request.method
-  const path = request.uri
-  const authHeader = request.headers['authorization']?.[0]?.value
+export async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> {
+  const method = event?.requestContext?.http?.method
+  if (!method) {
+    console.error('Unexpected event shape:', JSON.stringify(event, null, 2))
+    throw new Error('Missing HTTP method')
+  }
+
+  const path = event.rawPath
+  const authHeader = event.headers['authorization']
   const token = authHeader?.split(' ')[1] ?? undefined
 
   try {
-    const body = request.body?.data
-      ? JSON.parse(Buffer.from(request.body.data, request.body.encoding === 'base64' ? 'base64' : 'utf8').toString())
+    const body = event.body
+      ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString() : event.body)
       : {}
-
     // no auth
     if (path === '/user/login' && method === 'POST') {
       const token = await loginUser(body)
