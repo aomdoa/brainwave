@@ -71,9 +71,15 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
       throw new error.ForbiddenError('Invalid token')
     }
 
-    if (path === '/user' && method === 'GET') {
-      const user = await getUser(pk)
-      return response(200, user)
+    if (method === 'GET') {
+      if (path === '/user') {
+        const user = await getUser(pk)
+        return response(200, user)
+      } else if (path === '/tags') {
+        return response(200, [])
+      } else if (path === '/thoughts') {
+        return response(200, [])
+      }
     }
 
     return response(404, { message: 'Not found' })

@@ -9,7 +9,9 @@
     "dev": "vite --host",
     "build": "yarn clean && node _scripts/build.mjs && vue-tsc -b && vite build --mode production",
     "preview": "vite preview",
-    "package": "node _scripts/package.mjs"
+    "package": "node _scripts/package.mjs",
+    "aws:deploy": "aws s3 sync ./dist s3://brainwave-287946892756-ca-central-1-an --region ca-central-1",
+    "aws:clearCache": "aws cloudfront create-invalidation --distribution-id E1DOIRW6NEX575 --paths \"/*\""
   },
   "dependencies": {
     "@brainwave/shared": "1.0.1",
