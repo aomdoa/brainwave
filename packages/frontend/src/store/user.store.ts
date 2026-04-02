@@ -4,9 +4,9 @@
 import { ref } from 'vue'
 import { me, login as serviceLogin, updateToken } from '../api'
 import { isSubscribed } from '../utils/features'
-import type { UserClient } from '@brainwave/shared'
+import type { UserClientRecord } from '@brainwave/shared'
 
-export interface User extends UserClient {
+export interface User extends UserClientRecord {
   isSubscribed: boolean
 }
 

@@ -1,6 +1,10 @@
+/**
+ * @copyright 2026 David Shurgold <aomdoa@gmail.com>
+ */
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda'
 import { loginUser, createUser, getUser } from './user'
-import { jwt, error } from './shared'
+import { checkLive, checkReady } from './health'
+import { jwt, error, config } from './shared'
 
 function response(statusCode: number, body: unknown): APIGatewayProxyResultV2 {
   return {
@@ -8,6 +12,8 @@ function response(statusCode: number, body: unknown): APIGatewayProxyResultV2 {
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
     body: JSON.stringify(body),
   }
@@ -18,6 +24,9 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
   if (!method) {
     console.error('Unexpected event shape:', JSON.stringify(event, null, 2))
     throw new Error('Missing HTTP method')
+  } else if (method === 'OPTIONS') {
+    console.log('Received OPTIONS request, returning 200 for CORS preflight')
+    return response(200, {})
   }
 
   const path = event.rawPath
@@ -29,14 +38,25 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
       ? JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString() : event.body)
       : {}
     // no auth
-    if (path === '/user/login' && method === 'POST') {
-      const token = await loginUser(body)
-      return response(200, token)
-    }
-
-    if (path === '/user' && method === 'POST') {
-      const result = await createUser(body)
-      return response(201, result)
+    if (method === 'GET') {
+      if (path === '/health/live') {
+        const status = checkLive()
+        return response(200, status)
+      } else if (path === '/health/ready') {
+        const status = checkReady()
+        return response(200, status)
+      } else if (path === '/user/config') {
+        const userConfig = config.getUserConfig()
+        return response(200, userConfig)
+      }
+    } else if (method === 'POST') {
+      if (path === '/user/login') {
+        const token = await loginUser(body)
+        return response(200, token)
+      } else if (path === '/user') {
+        const result = await createUser(body)
+        return response(201, result)
+      }
     }
 
     // auth required for all other routes - verify token

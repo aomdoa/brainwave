@@ -18,10 +18,10 @@ import type {
   ThoughtSearchResults,
   ThoughtSimplifiedRelation,
   ThoughtStatus,
-  UserClient,
-  UserClientCreate,
-  UserClientUpdate,
+  UserClientRecord,
   UserConfig,
+  UserCreateRequest,
+  UserUpdateRequest,
 } from '@brainwave/shared'
 import type { User } from './store/user.store'
 
@@ -104,7 +104,7 @@ export async function updateToken(token: string): Promise<User> {
 
 // Get our user info
 export async function me(): Promise<User> {
-  const response = await api.get<User>('/user/me')
+  const response = await api.get<User>('/user')
   if (response.status !== 200) {
     throw new Error(`Failed to get user: ${JSON.stringify(response.data)}`)
   }
@@ -118,8 +118,8 @@ export async function getAuthConfig(): Promise<UserConfig> {
 }
 
 // Register the new user
-export async function registerUser(registration: UserClientCreate): Promise<User> {
-  const response = await api.post('/user/register', registration)
+export async function registerUser(registration: UserCreateRequest): Promise<User> {
+  const response = await api.post('/user', registration)
   if (response.status !== 200) {
     throw new Error(`Failed to register user: ${response.data}`)
   }
@@ -250,8 +250,8 @@ export async function confirmAccount(email: string, token: string): Promise<bool
   return true
 }
 
-export async function updateUser(user: UserClientUpdate): Promise<UserClient> {
-  const response = await api.patch<UserClient>(`user/me`, user)
+export async function updateUser(user: UserUpdateRequest): Promise<UserClientRecord> {
+  const response = await api.patch<UserClientRecord>(`user`, user)
   if (response.status !== 200) {
     throw new Error(`Unable to update user: ${response.data}`)
   }

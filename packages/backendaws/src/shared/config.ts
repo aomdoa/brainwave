@@ -8,11 +8,13 @@ export const config = {
   REGION: process.env.AWS_REGION ?? 'ca-central-1',
   JWT_SECRET: process.env.JWT_SECRET ?? 'dave',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN ?? '6h',
+  NAME_MIN_LENGTH: parseInt(process.env.NAME_MIN_LENGTH ?? '5'),
+  PASSWORD_MIN_LENGTH: parseInt(process.env.PASSWORD_MIN_LENGTH ?? '12'),
 }
 
-export function getSchemaConfig(): UserConfig {
+export function getUserConfig(): UserConfig {
   return {
-    minNameLength: parseInt(process.env.NAME_MIN_LENGTH ?? '5'),
-    minPasswordLength: parseInt(process.env.PASSWORD_MIN_LENGTH ?? '12'),
+    minNameLength: config.NAME_MIN_LENGTH,
+    minPasswordLength: config.PASSWORD_MIN_LENGTH,
   }
 }

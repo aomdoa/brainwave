@@ -1,60 +1,51 @@
+/**
+ * @copyright 2026 David Shurgold <aomdoa@gmail.com>
+ */
+import express from 'express'
 import { handler } from '../src/index'
+import type { APIGatewayProxyEventV2 } from 'aws-lambda'
 
-function makeEvent(method: string, path: string, body?: unknown, token?: string) {
-  const bodyStr = body ? JSON.stringify(body) : undefined
-  return {
+const app = express()
+app.use(express.json())
+
+app.all('{*path}', async (req, res) => {
+  const body = req.body && Object.keys(req.body).length > 0 ? JSON.stringify(req.body) : undefined
+
+  const event: Partial<APIGatewayProxyEventV2> = {
     requestContext: {
-      http: { method },
+      http: {
+        method: req.method,
+        path: req.path,
+        protocol: 'HTTP/1.1',
+        sourceIp: '127.0.0.1',
+        userAgent: req.headers['user-agent'] ?? '',
+      },
+      accountId: 'local',
+      apiId: 'local',
+      authorizer: undefined,
+      domainName: 'localhost',
+      domainPrefix: 'local',
+      requestId: 'local',
+      routeKey: '$default',
+      stage: '$default',
+      time: new Date().toISOString(),
+      timeEpoch: Date.now(),
     },
-    rawPath: path,
+    rawPath: req.path,
+    rawQueryString: '',
+    headers: req.headers as Record<string, string>,
     isBase64Encoded: false,
-    body: bodyStr,
-    headers: token ? { authorization: `Bearer ${token}` } : {},
-  }
-}
-
-async function create() {
-  const [, , method = 'POST', path = '/user'] = process.argv
-  const body = {
-    name: 'David Test 2',
-    email: 'david2@test.com',
-    password: 'supersecret123',
-    confirmPassword: 'supersecret123',
+    body,
   }
 
-  console.log(`\n→ ${method} ${path}`)
-  console.log('Body:', JSON.stringify(body, null, 2))
+  const result = await handler(event as APIGatewayProxyEventV2)
+  const typedResult = result as { statusCode: number; headers?: Record<string, string>; body?: string }
 
-  const result = await handler(makeEvent(method, path, body) as any)
-  console.log('\nResponse:', JSON.stringify(result, null, 2))
-}
-
-async function login() {
-  const [, , method = 'POST', path = '/user/login'] = process.argv
-  const body = {
-    email: 'david2@test.com',
-    password: 'supersecret123',
+  if (typedResult.headers) {
+    Object.entries(typedResult.headers).forEach(([key, value]) => res.setHeader(key, value))
   }
+  res.status(typedResult.statusCode).send(typedResult.body ? JSON.parse(typedResult.body) : {})
+})
 
-  console.log(`\n→ ${method} ${path}`)
-  console.log('Body:', JSON.stringify(body, null, 2))
-
-  const result = await handler(makeEvent(method, path, body) as any)
-  console.log('\nResponse:', JSON.stringify(result, null, 2))
-}
-
-const token =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwayI6IlVTRVIjMDFLTjRKMEpKOTNEWTJYSDFQVDI0QVhWMUoiLCJpYXQiOjE3NzUwNTcxNDQsImV4cCI6MTc3NTA3ODc0NH0.sO_9D5qcq0KApTrhsA24fdiimhJXwJMrz4HgY2kz018'
-async function getUser() {
-  const [, , method = 'GET', path = '/user'] = process.argv
-
-  console.log(`\n→ ${method} ${path}`)
-  console.log(`Token: ${token}`)
-
-  const result = await handler(makeEvent(method, path, undefined, token) as any)
-  console.log('\nResponse:', JSON.stringify(result, null, 2))
-}
-
-//create().catch(console.error)
-//login().catch(console.error)
-getUser().catch(console.error)
+const PORT = process.env.PORT ?? 5005
+app.listen(PORT, () => console.log(`Lambda running locally on http://localhost:${PORT}`))

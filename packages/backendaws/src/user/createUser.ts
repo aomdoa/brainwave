@@ -9,7 +9,7 @@ import { config, db, error } from '../shared'
 
 export default async function createUser(body: unknown) {
   // parse and validate input
-  const schema = userCreateSchema(config.getSchemaConfig())
+  const schema = userCreateSchema(config.getUserConfig())
   const parsed = schema.safeParse(body)
   if (!parsed.success) {
     throw new error.ValidationError('Invalid input', parsed.error)

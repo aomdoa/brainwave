@@ -5,7 +5,13 @@ import { QueryCommand } from '@aws-sdk/lib-dynamodb'
 import bcrypt from 'bcryptjs'
 import { db, config, error, jwt } from '../shared'
 
-export default async function loginUser({ email, password }: { email: string; password: string }): Promise<string> {
+export default async function loginUser({
+  email,
+  password,
+}: {
+  email: string
+  password: string
+}): Promise<{ token: string }> {
   if (email == null || password == null) {
     throw new error.ValidationError('Please provide the email and password')
   }
@@ -30,5 +36,5 @@ export default async function loginUser({ email, password }: { email: string; pa
   }
 
   const token = jwt.signToken({ pk: user.pk }, user.authLength ?? config.config.JWT_EXPIRES_IN)
-  return token
+  return { token }
 }
