@@ -2,7 +2,7 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
@@ -54,6 +54,7 @@ const showHistory = ref(false)
 const schema = ref<ReturnType<typeof thoughtCreateSchema> | null>(null)
 const errors = ref<Record<string, string>>({})
 const confirm = useConfirm()
+
 // functions
 const thoughtId = ref(Number(route.params.thoughtId))
 
@@ -176,12 +177,24 @@ const sortTags = (tags: TagClient[]): TagClient[] => {
 async function searchThoughts(event: any) {
   const query = event.query?.trim()
 
-  if (!query || query.length < 3) {
-    thoughtSuggestions.value = []
-    return
-  }
-
-  const { thoughts } = await getThoughts({ search: query, page: 1, size: 50 })
+  console.log(`query is ${JSON.stringify(query)}`)
+  const { thoughts } = await getThoughts({
+    search: query,
+    filter: [
+      {
+        field: 'status',
+        operator: 'eq',
+        value: 'ACTIVE',
+        logical: 'and',
+      },
+    ],
+    page: 1,
+    size: 50,
+    orderBy: {
+      field: 'updatedAt',
+      direction: 'desc',
+    },
+  })
   thoughtSuggestions.value = thoughts.filter((t) => t.thoughtId !== thought.value.thoughtId)
 }
 
@@ -290,6 +303,7 @@ onMounted(async () => {
         <label for="relations">Related Thoughts:</label>
 
         <AutoComplete
+          ref="thoughtAutoComplete"
           v-model="thoughtRelations"
           multiple
           optionLabel="title"
@@ -297,7 +311,8 @@ onMounted(async () => {
           :suggestions="thoughtSuggestions"
           placeholder="Search thoughts"
           @complete="searchThoughts"
-          :minLength="3"
+          :minLength="0"
+          completeOnFocus
         >
           <template #chip="slotProps">
             <span class="p-chip-text p-d-flex p-ai-center">
