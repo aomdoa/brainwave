@@ -11,46 +11,43 @@ export interface UserConfig {
 export const userAuthLength = ['1h', '6h', '1d', '7d', '30d'] as const
 export type UserValidLength = (typeof userAuthLength)[number]
 
-// core users
-export const userBaseSchema = z.object({
+export const userSchema = z.object({
   name: z.string(),
   email: z.email(),
-  isConfirmed: z.boolean().default(false),
+  isConfirmed: z.boolean(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
   authLength: z.enum(userAuthLength),
 })
-export const userServerSchema = userBaseSchema
+export const userServerSchema = userSchema
   .extend({
-    userId: z.number().positive(),
+    userId: z.number(),
   })
   .strict()
-export const userClientSchema = userBaseSchema.strip()
-export type UserServer = z.infer<typeof userServerSchema>
-export type UserClient = z.infer<typeof userClientSchema>
+export const userClientSchema = userSchema
+export type UserServer = z.output<typeof userServerSchema> // what the server sees
+export type UserClient = z.output<typeof userClientSchema> // what the client sees
 
-// creation of users
-export const userBaseCreateSchema = (config: UserConfig) =>
+// input for creating users
+export const userCreateSchema = (config: UserConfig) =>
   z
     .object({
       name: z.string().min(config.minNameLength),
       email: z.email(),
       password: z.string().min(config.minPasswordLength),
       confirmPassword: z.string(),
-      isConfirmed: z.boolean().optional(),
+      isConfirmed: z.boolean().optional().default(false),
       authLength: z.enum(userAuthLength).optional().default('6h'),
     })
     .refine((data) => data.password === data.confirmPassword, {
       message: 'Passwords do not match',
       path: ['confirmPassword'],
     })
-export const userServerCreateSchema = (config: UserConfig) => userBaseCreateSchema(config).strict()
-export const userClientCreateSchema = (config: UserConfig) => userBaseCreateSchema(config).strip()
-export type UserServerCreate = z.infer<ReturnType<typeof userServerCreateSchema>>
-export type UserClientCreate = z.infer<ReturnType<typeof userClientCreateSchema>>
+    .strict()
+export type UserCreateRequest = z.input<ReturnType<typeof userCreateSchema>>
 
 // update of the users
-export const userBaseUpdateSchema = (config: UserConfig) =>
+export const userUpdateSchema = (config: UserConfig) =>
   z
     .object({
       name: z.string().min(config.minNameLength).optional(),
@@ -58,18 +55,11 @@ export const userBaseUpdateSchema = (config: UserConfig) =>
       password: z.string().min(config.minPasswordLength).optional(),
       confirmPassword: z.string().optional(),
       isConfirmed: z.boolean().optional(),
-      authLength: z.enum(userAuthLength).default('6h'),
+      authLength: z.enum(userAuthLength).optional(),
     })
     .refine((data) => data.password === data.confirmPassword, {
       message: 'Passwords do not match',
       path: ['confirmPassword'],
     })
-export const userServerUpdateSchema = (config: UserConfig) =>
-  userBaseUpdateSchema(config)
-    .extend({
-      userId: z.number().positive(),
-    })
     .strict()
-export const userClientUpdateSchema = userBaseUpdateSchema
-export type UserServerUpdate = z.infer<ReturnType<typeof userServerUpdateSchema>>
-export type UserClientUpdate = z.infer<ReturnType<typeof userClientUpdateSchema>>
+export type UserUpdateRequest = z.input<ReturnType<typeof userUpdateSchema>>

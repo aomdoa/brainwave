@@ -4,10 +4,9 @@
 import { Router } from 'express'
 import { authMiddleware, AuthRequest } from '../utils/express'
 import config from '../utils/config'
-import { TagClient, tagClientSchema, TagConfig, TagServerCreate, TagServerUpdate } from '@brainwave/shared'
+import { TagClient, tagClientSchema, TagConfig, TagUpdateRequest } from '@brainwave/shared'
 import { Tag } from '@prisma/client'
-import { createTag, deleteTag, getTag, getTagByName, getTags, updateTag } from '../services/tag.service'
-import { ConflictError } from '../utils/error'
+import { createTag, deleteTag, getTag, getTags, updateTag } from '../services/tag.service'
 
 export const publicTag = (tag: Tag): TagClient =>
   tagClientSchema.parse({
@@ -41,15 +40,7 @@ export function registerTagRoutes(): Router {
 
   router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
-      const tagData = {
-        userId: req.userId,
-        ...req.body,
-      } as TagServerCreate
-      const existing = await getTagByName(tagData.name, tagData.userId)
-      if (existing) {
-        throw new ConflictError(`A tag with name ${tagData.name} already exists`)
-      }
-      const tag = await createTag(tagData)
+      const tag = await createTag(req.userId ?? 0, req.body)
       return res.json(publicTag(tag))
     } catch (err) {
       return next(err)
@@ -71,16 +62,9 @@ export function registerTagRoutes(): Router {
       const tagId = Number(req.params.id)
       const tagData = {
         tagId,
-        userId: req.userId,
         ...req.body,
-      } as TagServerUpdate
-      if (tagData.name) {
-        const existing = await getTagByName(tagData.name, tagData.userId)
-        if (existing && existing.tagId != tagId) {
-          throw new ConflictError(`A tag with name ${tagData.name} already exists`)
-        }
-      }
-      const tag = await updateTag(tagData)
+      } as TagUpdateRequest
+      const tag = await updateTag(req.userId ?? 0, tagData)
       return res.json(publicTag(tag))
     } catch (err) {
       return next(err)

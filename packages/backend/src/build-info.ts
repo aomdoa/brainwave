@@ -1,6 +1,6 @@
 // AUTO-GENERATED FILE. DO NOT EDIT.
 export const buildInfo = {
-  version: "1.0.0-SNAPSHOT",
-  buildTime: "2026-03-27T12:36:41.902Z",
-  gitSha: "2ca212d",
+  version: "1.1.0",
+  buildTime: "2026-04-06T15:11:50.002Z",
+  gitSha: "f9cd609",
 }

@@ -22,9 +22,9 @@ import {
 import DateTime from './DateTime.vue'
 import { router } from '../router'
 import {
+  thoughtCreateSchema,
   type TagClient,
   type ThoughtClient,
-  thoughtClientCreateSchema,
   type ThoughtHistoryClient,
   type ThoughtStatus,
 } from '@brainwave/shared'
@@ -51,7 +51,7 @@ const thoughtRelations = ref<ThoughtClient[]>([])
 const thoughtSuggestions = ref<ThoughtClient[]>([])
 const thoughtHistory = ref<ThoughtHistoryClient[]>([])
 const showHistory = ref(false)
-const schema = ref<ReturnType<typeof thoughtClientCreateSchema> | null>(null)
+const schema = ref<ReturnType<typeof thoughtCreateSchema> | null>(null)
 const errors = ref<Record<string, string>>({})
 const confirm = useConfirm()
 // functions
@@ -203,7 +203,7 @@ const fetchThought = async (thoughtId: number) => {
   try {
     tags = sortTags(await getTags())
     const config = await getThoughtConfig()
-    schema.value = thoughtClientCreateSchema(config)
+    schema.value = thoughtCreateSchema(config)
     if (thoughtId > 0) {
       const thoughtData = await getThoughtById(thoughtId)
       thought.value = thoughtData
