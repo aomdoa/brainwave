@@ -6,7 +6,7 @@ import { createUser, getConfirmation, getUser, loginUser, sendConfirmation, upda
 import { signToken } from '../utils/jwt'
 import { authMiddleware, AuthRequest } from '../utils/express'
 import { config } from '../utils/config'
-import { UserConfig, UserServerUpdate } from '@brainwave/shared'
+import { UserConfig, UserUpdateRequest } from '@brainwave/shared'
 import passport from '../utils/passport'
 import { ForbiddenError } from '../utils/error'
 
@@ -106,12 +106,8 @@ export function registerUserRoutes(): Router {
 
   router.patch('/me', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
-      const userData = {
-        userId: req.userId,
-        ...req.body,
-      } as UserServerUpdate
-
-      const user = await updateUser(userData)
+      const userData = req.body as UserUpdateRequest
+      const user = await updateUser(req.userId ?? 0, userData)
       res.json({ ...user })
     } catch (err) {
       next(err)

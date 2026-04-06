@@ -3,9 +3,9 @@
  */
 
 import { Tag } from '@prisma/client'
-import { tagServerCreateSchema, TagServerCreate, TagServerUpdate, tagServerUpdateSchema } from '@brainwave/shared'
+import { TagCreateRequest, tagCreateSchema, TagUpdateRequest, tagUpdateSchema } from '@brainwave/shared'
 import { config } from '../utils/config'
-import { NotFoundError, ValidationError } from '../utils/error'
+import { ConflictError, NotFoundError, ValidationError } from '../utils/error'
 import { prisma } from '../utils/prisma'
 import logger from '../utils/logger'
 
@@ -19,16 +19,21 @@ function getSchemaConfig() {
   }
 }
 
-export async function createTag(data: TagServerCreate): Promise<Tag> {
-  const schema = tagServerCreateSchema(getSchemaConfig())
+export async function createTag(userId: number, data: TagCreateRequest): Promise<Tag> {
+  const schema = tagCreateSchema(getSchemaConfig())
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
   }
 
+  const existing = await getTagByName(parsed.data.name, userId)
+  if (existing) {
+    throw new ConflictError(`A tag with name ${parsed.data.name} already exists`)
+  }
+
   const tag = await prisma.tag.create({
     data: {
-      userId: parsed.data.userId,
+      userId,
       name: parsed.data.name,
       notes: parsed.data.notes,
     },
@@ -37,13 +42,21 @@ export async function createTag(data: TagServerCreate): Promise<Tag> {
   return tag
 }
 
-export async function updateTag(data: TagServerUpdate): Promise<Tag> {
-  const schema = tagServerUpdateSchema(getSchemaConfig())
+export async function updateTag(userId: number, data: TagUpdateRequest): Promise<Tag> {
+  const schema = tagUpdateSchema(getSchemaConfig())
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
   }
-  const { tagId, userId, ...updateData } = parsed.data
+  const { tagId, ...updateData } = parsed.data
+
+  if (updateData.name) {
+    const existing = await getTagByName(updateData.name, userId)
+    if (existing && existing.tagId != tagId) {
+      throw new ConflictError(`A tag with name ${updateData.name} already exists`)
+    }
+  }
+
   const tag = await prisma.tag.update({ where: { tagId, userId }, data: updateData })
   serviceLog.debug(`updatedTag: ${JSON.stringify(tag)}`)
   return tag

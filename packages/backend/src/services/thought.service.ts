@@ -4,13 +4,13 @@
 
 import { Thought } from '@prisma/client'
 import {
-  thoughtServerCreateSchema,
-  ThoughtServerCreate,
-  ThoughtServerUpdate,
-  thoughtServerUpdateSchema,
   thoughtSearchParamsSchema,
   SearchPage,
   SearchFilter,
+  ThoughtCreate,
+  thoughtCreateSchema,
+  ThoughtUpdate,
+  thoughtUpdateSchema,
 } from '@brainwave/shared'
 import { config } from '../utils/config'
 import { NotFoundError, ValidationError } from '../utils/error'
@@ -30,8 +30,8 @@ function getSchemaConfig() {
   }
 }
 
-export async function createThought(data: ThoughtServerCreate): Promise<Thought> {
-  const schema = thoughtServerCreateSchema(getSchemaConfig())
+export async function createThought(userId: number, data: ThoughtCreate): Promise<Thought> {
+  const schema = thoughtCreateSchema(getSchemaConfig())
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
@@ -39,7 +39,7 @@ export async function createThought(data: ThoughtServerCreate): Promise<Thought>
 
   const thought = await prisma.thought.create({
     data: {
-      userId: parsed.data.userId,
+      userId,
       title: parsed.data.title,
       body: parsed.data.body,
       status: parsed.data.status,
@@ -51,13 +51,13 @@ export async function createThought(data: ThoughtServerCreate): Promise<Thought>
   return thought
 }
 
-export async function updateThought(data: ThoughtServerUpdate): Promise<Thought> {
-  const schema = thoughtServerUpdateSchema(getSchemaConfig())
+export async function updateThought(userId: number, data: ThoughtUpdate): Promise<Thought> {
+  const schema = thoughtUpdateSchema(getSchemaConfig())
   const parsed = schema.safeParse(data)
   if (!parsed.success) {
     throw new ValidationError('Invalid input', parsed.error)
   }
-  const { thoughtId, userId, ...updateData } = { ...parsed.data, updatedAt: new Date() }
+  const { thoughtId, ...updateData } = { ...parsed.data, updatedAt: new Date() }
   if (updateData.body) {
     // if we're given a body then probably a history is needed
     const oldThought = await getThought(thoughtId, userId)

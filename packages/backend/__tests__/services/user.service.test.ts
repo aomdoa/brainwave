@@ -200,10 +200,9 @@ describe('user.service', () => {
 
   describe('updateUser', () => {
     it('full user update', async () => {
-      const update = { userId: 1, ...input }
       mockPrisma.user.findUnique.mockResolvedValue(output as any)
       mockPrisma.user.update.mockResolvedValue(output as any)
-      const user = await updateUser(update)
+      const user = await updateUser(1, input)
       expect(+user.updatedAt).toBeGreaterThan(+date)
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({ where: { userId: 1 } })
       expect(mockPrisma.user.update).toHaveBeenLastCalledWith({
@@ -219,7 +218,7 @@ describe('user.service', () => {
     it('no update', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(output as any)
       mockPrisma.user.update.mockResolvedValue(output as any)
-      const user = await updateUser({ userId: 1, authLength: '1h' })
+      const user = await updateUser(1, { authLength: '1h' })
       expect(+user.updatedAt).toBeGreaterThan(+date)
       expect(mockPrisma.user.update).toHaveBeenLastCalledWith({
         where: { userId: 1 },
@@ -233,8 +232,8 @@ describe('user.service', () => {
 
     it('no access', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null)
-      await expect(updateUser({ name: '1' } as any)).rejects.toThrow(ValidationError)
-      await expect(updateUser({ userId: 1, authLength: '1h' })).rejects.toThrow(NotFoundError)
+      await expect(updateUser(1, { name: '1' } as any)).rejects.toThrow(ValidationError)
+      await expect(updateUser(1, { authLength: '1h' })).rejects.toThrow(NotFoundError)
     })
   })
 })

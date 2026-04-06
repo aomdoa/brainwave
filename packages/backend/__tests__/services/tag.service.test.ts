@@ -40,7 +40,7 @@ describe('tag.service', () => {
     it('successful creation', async () => {
       mockPrisma.tag.create.mockResolvedValue(baseTag)
 
-      const result = await createTag(input)
+      const result = await createTag(10, input)
 
       expect(mockPrisma.tag.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -73,7 +73,7 @@ describe('tag.service', () => {
       const updated = { ...baseTag, title: 'Updated' }
       mockPrisma.tag.update.mockResolvedValue(updated)
 
-      const result = await updateTag(input)
+      const result = await updateTag(10, input)
 
       expect(mockPrisma.tag.update).toHaveBeenCalledWith({
         where: { tagId: input.tagId, userId: input.userId },

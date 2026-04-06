@@ -11,13 +11,7 @@ import {
   touchThought,
   updateThought,
 } from '../services/thought.service'
-import {
-  ThoughtClient,
-  thoughtClientSchema,
-  ThoughtConfig,
-  ThoughtServerCreate,
-  ThoughtServerUpdate,
-} from '@brainwave/shared'
+import { ThoughtClient, thoughtClientSchema, ThoughtConfig, ThoughtUpdate } from '@brainwave/shared'
 import config from '../utils/config'
 import { Tag, Thought } from '@prisma/client'
 import { publicTag } from './tag.route'
@@ -56,11 +50,7 @@ export function registerThoughtRoutes(): Router {
   // private
   router.post('/', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
-      const thoughtData = {
-        userId: req.userId,
-        ...req.body,
-      } as ThoughtServerCreate
-      const thought = await createThought(thoughtData)
+      const thought = await createThought(req.userId ?? 0, req.body)
       return res.json(publicThought(thought))
     } catch (err) {
       return next(err)
@@ -83,11 +73,10 @@ export function registerThoughtRoutes(): Router {
       const thoughtId = Number(req.params.id)
       const thoughtData = {
         thoughtId,
-        userId: req.userId,
         ...req.body,
-      } as ThoughtServerUpdate
+      } as ThoughtUpdate
 
-      const thought = await updateThought(thoughtData)
+      const thought = await updateThought(req.userId ?? 0, thoughtData)
       return res.json(publicThought(thought))
     } catch (err) {
       return next(err)

@@ -55,7 +55,7 @@ describe('thought.service', () => {
     it('successful creation', async () => {
       mockPrisma.thought.create.mockResolvedValue(baseThought)
 
-      const result = await createThought(input)
+      const result = await createThought(10, input)
 
       expect(mockPrisma.thought.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -90,7 +90,7 @@ describe('thought.service', () => {
       const updated = { ...baseThought, title: 'Updated' }
       mockPrisma.thought.update.mockResolvedValue(updated)
 
-      const result = await updateThought(input)
+      const result = await updateThought(10, input)
 
       expect(mockPrisma.thought.update).toHaveBeenCalledWith({
         where: { thoughtId: input.thoughtId, userId: input.userId },
@@ -113,7 +113,7 @@ describe('thought.service', () => {
       mockPrisma.thought.findUnique.mockResolvedValue(baseThought)
       const mockCreateHistory = createHistory as jest.Mock
       mockCreateHistory.mockResolvedValue(null)
-      const result = await updateThought({ thoughtId: 1, userId: 10, body: 'Updated body...' })
+      const result = await updateThought(10, { thoughtId: 1, body: 'Updated body...' })
 
       expect(mockPrisma.thought.update).toHaveBeenCalledWith({
         where: { thoughtId: input.thoughtId, userId: input.userId },
