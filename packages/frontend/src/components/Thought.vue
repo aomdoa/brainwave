@@ -56,6 +56,9 @@ const errors = ref<Record<string, string>>({})
 const confirm = useConfirm()
 
 // functions
+const tomorrow = new Date()
+tomorrow.setDate(tomorrow.getDate() + 1)
+tomorrow.setHours(0, 0, 0, 0)
 const thoughtId = ref(Number(route.params.thoughtId))
 
 watch(
@@ -335,7 +338,7 @@ onMounted(async () => {
       </div>
       <div class="form-group">
         <label for="nextReminder">Next Reminder: </label>
-        <DateTime id="nextReminder" v-model="nextReminder" />
+        <DateTime id="nextReminder" v-model="nextReminder" :minDate="tomorrow" :manualInput="false" showClear />
         <div v-if="errors.nextReminder" class="field-error">
           {{ errors.nextReminder }}
         </div>

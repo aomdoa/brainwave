@@ -170,7 +170,10 @@ onMounted(async () => {
           v-for="thought in thoughts"
           :key="thought.thoughtId"
           @click="goToThought(thought.thoughtId)"
-          class="clickable-row"
+          :class="[
+            'clickable-row',
+            { todo: thought.nextReminder !== null && new Date(thought.nextReminder) < new Date() },
+          ]"
         >
           <td>{{ thought.title }}</td>
           <td v-if="!isMobile" style="width: 18ch">{{ dayjs(thought.updatedAt).format('YYYY-MM-DD HH:mm') }}</td>
@@ -239,5 +242,8 @@ onMounted(async () => {
 }
 .controls .p-select-label {
   font-size: 0.8rem;
+}
+.todo {
+  background-color: #fff3cd;
 }
 </style>
