@@ -49,6 +49,21 @@ export async function sendConfirmationEmail(to: string, token: string) {
   if (process.env.NODE_ENV === 'development') {
     serviceLog.debug(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`)
   }
-  serviceLog.debug(`Email to ${to}: ${JSON.stringify(info)}`)
+  serviceLog.debug(`Email confirmation to ${to}: ${JSON.stringify(info)}`)
+  return info
+}
+
+export async function sendForgotPasswordEmail(to: string, token: string) {
+  const transporter = await createTransporter()
+  const from = `"Brainwave Forgot Password" ${config.SMTP_FROM}`
+  const subject = 'Reset Your Brainwave Password'
+  const link = `${config.FRONTEND_URL}resetPassword?token=${token}`
+  const text = `Please reset your brainwave password by going to ${link}`
+  const html = `Please reset your brainwave password by going to <a href="${link}">${link}</a>`
+  const info = await transporter.sendMail({ from, to, subject, text, html })
+  if (process.env.NODE_ENV === 'development') {
+    serviceLog.debug(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`)
+  }
+  serviceLog.debug(`Email forgot password to ${to}: ${JSON.stringify(info)}`)
   return info
 }

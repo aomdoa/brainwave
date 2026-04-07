@@ -258,6 +258,14 @@ export async function updateUser(user: UserUpdateRequest): Promise<UserClient> {
   return response.data
 }
 
+export async function forgotPassword(email: string): Promise<void> {
+  await api.post(`user/forgotPassword`, { email })
+}
+
+export async function resetPassword(token: string, password: string, confirmPassword: string): Promise<void> {
+  await api.post(`user/resetPassword`, { token, password, confirmPassword })
+}
+
 // Report error
 export async function reportError(err: Error, instance: any, info: String) {
   if (err == null) return

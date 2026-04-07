@@ -2,7 +2,16 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { Router } from 'express'
-import { createUser, getConfirmation, getUser, loginUser, sendConfirmation, updateUser } from '../services/user.service'
+import {
+  createUser,
+  getConfirmation,
+  getUser,
+  loginUser,
+  resetPassword,
+  sendConfirmation,
+  sendForgotPassword,
+  updateUser,
+} from '../services/user.service'
 import { signToken } from '../utils/jwt'
 import { authMiddleware, AuthRequest } from '../utils/express'
 import { config } from '../utils/config'
@@ -80,6 +89,28 @@ export function registerUserRoutes(): Router {
           window.close();
         </script>
       `)
+    } catch (err) {
+      next(err)
+    }
+  })
+
+  router.post('/forgotPassword', async (req, res, next) => {
+    try {
+      const email = (req.body?.email as string) ?? undefined
+      await sendForgotPassword(email)
+      res.json({ status: 'sent' })
+    } catch (err) {
+      next(err)
+    }
+  })
+
+  router.post('/resetPassword', async (req, res, next) => {
+    try {
+      const token = (req.body?.token as string) ?? undefined
+      const password = (req.body?.password as string) ?? undefined
+      const confirmPassword = (req.body?.confirmPassword as string) ?? undefined
+      await resetPassword(token, password, confirmPassword)
+      res.json({ status: 'reset' })
     } catch (err) {
       next(err)
     }
