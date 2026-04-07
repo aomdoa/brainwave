@@ -28,7 +28,6 @@ export function initialize(): Express {
   app.use(cors({ origin: config.CORS_ORIGIN, credentials: true }))
   app.use(passport.initialize())
 
-  // eslint-disable-next-line no-unused-vars
   const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     const status = err.status ?? 500
     const expose = (err as AppError).expose ?? false

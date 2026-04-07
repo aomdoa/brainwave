@@ -9,13 +9,13 @@ import crypto from 'crypto'
 import logger from '../utils/logger'
 import { UserCreateRequest, userCreateSchema, UserUpdateRequest, userUpdateSchema } from '@brainwave/shared'
 import { config } from '../utils/config'
-import { sendConfirmationEmail } from '../utils/email'
+import { sendConfirmationEmail, sendForgotPasswordEmail } from '../utils/email'
 
 const serviceLog = logger.child({ file: 'user.service.ts' })
-export type SafeUser = Omit<User, 'password'>
+export type SafeUser = Omit<User, 'password' | 'forgotPassToken' | 'forgotPassExpiry'>
 
 function toSafeUser(user: User): SafeUser {
-  const { password: _ignore, ...safeUser } = user
+  const { password: _ignore, forgotPassToken: _ignore2, forgotPassExpiry: _ignore3, ...safeUser } = user
   return safeUser
 }
 
@@ -170,4 +170,71 @@ export async function updateUser(userId: number, userData: UserUpdateRequest): P
   const updatedUser = await prisma.user.update({ where: { userId }, data: updateData })
   serviceLog.debug(`Updated user ${user.userId}`)
   return toSafeUser(updatedUser)
+}
+
+export async function sendForgotPassword(email: string): Promise<boolean> {
+  if (email == null) {
+    serviceLog.debug('Attempt to send forgot password email with missing email')
+    return false
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } })
+  if (!user) {
+    serviceLog.warn(`Attempt to send forgot password for non-existent email ${email}`)
+    return false
+  }
+
+  if (user.forgotPassExpiry && user.forgotPassExpiry > new Date()) {
+    serviceLog.warn(`Attempt to send forgot password for ${email} with existing request`)
+    return false
+  }
+
+  const token = crypto.randomBytes(20).toString('hex')
+  const expiry = new Date(Date.now() + config.PASSWORD_RESET_EXPIRY_SECONDS * 1000)
+  await prisma.user.update({
+    where: { userId: user.userId },
+    data: { forgotPassToken: token, forgotPassExpiry: expiry },
+  })
+
+  try {
+    await sendForgotPasswordEmail(user.email, token)
+    serviceLog.debug(`Sent forgot password email to ${user.email} with token ${token}`)
+    return true
+  } catch (err) {
+    const error = err as Error
+    serviceLog.warn(`Unable to send forgot password email for ${user.userId} to ${user.email}: ${error.message}`)
+    return false
+  }
+}
+
+export async function resetPassword(token: string, password: string, confirmPassword: string): Promise<boolean> {
+  if (token == null || password == null) {
+    serviceLog.debug('Attempt to reset password with missing token or password')
+    return false
+  }
+
+  const user = await prisma.user.findFirst({ where: { forgotPassToken: token } })
+  if (!user || !user.forgotPassExpiry || user.forgotPassExpiry < new Date()) {
+    serviceLog.warn(`Invalid attempt to reset password with token ${token}`)
+    return false
+  }
+
+  const schema = userUpdateSchema(getSchemaConfig())
+  const parsed = schema.safeParse({ password, confirmPassword })
+  if (!parsed.success) {
+    serviceLog.debug(
+      `Invalid password provided for reset password for user ${user.email}` + JSON.stringify(parsed.error)
+    )
+    return false
+  }
+
+  const salt = bcrypt.genSaltSync(10)
+  const hashed = bcrypt.hashSync(password, salt)
+  await prisma.user.update({
+    where: { userId: user.userId },
+    data: { password: hashed, forgotPassToken: null, forgotPassExpiry: null },
+  })
+
+  serviceLog.debug(`Reset password for user ${user.email}`)
+  return true
 }
