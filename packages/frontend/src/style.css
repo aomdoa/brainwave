@@ -13,6 +13,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light dark;
+    color: #f9f9f9;
+    background-color: #213547;
+  }
+}
+
 /* Container */
 body {
   margin: 0;
@@ -84,12 +92,8 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #f9f9f9;
   cursor: pointer;
   transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
 }
 button:focus,
 button:focus-visible {

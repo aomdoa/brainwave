@@ -246,4 +246,19 @@ onMounted(async () => {
 .todo {
   background-color: #fff3cd;
 }
+
+@media (prefers-color-scheme: dark) {
+  .todo {
+    background-color: #3c597e;
+  }
+
+  .clickable-row:hover {
+    background-color: #51657e;
+  }
+
+  .p-select,
+  .p-multiselect {
+    background-color: #2c2c39;
+  }
+}
 </style>

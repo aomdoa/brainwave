@@ -2,7 +2,7 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { ref, onMounted, computed, watch, nextTick } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 import dayjs from 'dayjs'
@@ -399,5 +399,21 @@ onMounted(async () => {
 .history-item {
   border-top: 1px solid black;
   margin-top: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .p-inputtext,
+  .p-component,
+  .p-datepicker,
+  .p-select,
+  .p-multiselect,
+  .p-autocomplete,
+  .p-autocomplete-input-multiple {
+    background-color: #2c2c39;
+  }
+
+  .chip-link {
+    color: white;
+  }
 }
 </style>
