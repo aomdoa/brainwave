@@ -6,6 +6,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { login as apiLogin, oauthLogin } from '../store/user.store'
 import { config } from '../utils/config'
+import { forgotPassword } from '../api'
 
 const router = useRouter()
 const email = ref('')
@@ -13,6 +14,7 @@ const password = ref('')
 const isProcessing = ref(false)
 const message = ref('')
 const failed = ref('')
+const showReset = ref(false)
 
 onMounted(() => {
   message.value = (router.options.history.state?.message as string) ?? ''
@@ -30,7 +32,8 @@ const login = async () => {
       if (error.message === 'need confirmation') {
         failed.value = 'You must confirm your account before logging in, please check your email'
       } else {
-        failed.value = 'Invalid credentials provided, please check your input'
+        failed.value = 'Invalid credentials provided, please check your input and try again.'
+        showReset.value = true
       }
       isProcessing.value = false
     })
@@ -60,6 +63,13 @@ const loginWithGoogle = () => {
 
   window.addEventListener('message', listener)
 }
+
+const startResetPassword = async () => {
+  await forgotPassword(email.value)
+  failed.value = ''
+  showReset.value = false
+  message.value = `A password reset link has been sent to ${email.value}. Please check your email and follow the instructions to reset your password.`
+}
 </script>
 <template>
   <p>
@@ -68,7 +78,12 @@ const loginWithGoogle = () => {
     abilities.
   </p>
   <p v-if="message">{{ message }}</p>
-  <p v-if="failed" style="color: red">{{ failed }}</p>
+  <p v-if="failed" style="color: red">
+    {{ failed }}
+    <a v-if="showReset" href="#" @click.prevent="startResetPassword" style="color: red; text-decoration: underline">
+      Reset Password
+    </a>
+  </p>
   <form @submit.prevent="login">
     <div class="form-group">
       <label for="email">Email: </label>

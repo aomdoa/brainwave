@@ -96,7 +96,7 @@ export function registerUserRoutes(): Router {
 
   router.post('/forgotPassword', async (req, res, next) => {
     try {
-      const email = req.query.email as string
+      const email = (req.body?.email as string) ?? undefined
       await sendForgotPassword(email)
       res.json({ status: 'sent' })
     } catch (err) {
@@ -106,7 +106,7 @@ export function registerUserRoutes(): Router {
 
   router.post('/resetPassword', async (req, res, next) => {
     try {
-      const token = (req.query.token as string) ?? undefined
+      const token = (req.body?.token as string) ?? undefined
       const password = (req.body?.password as string) ?? undefined
       const confirmPassword = (req.body?.confirmPassword as string) ?? undefined
       await resetPassword(token, password, confirmPassword)
