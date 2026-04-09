@@ -14,7 +14,6 @@ export interface User extends UserClient {
 export const currentUser = ref<User | null>(null)
 
 export async function login(email: string, password: string) {
-  console.log('login')
   const user = await serviceLogin(email, password)
   user.isSubscribed = await isSubscribed()
   user.refreshTokenAt = localStorage.getItem('refreshTokenAt') ? Number(localStorage.getItem('refreshTokenAt')) : 0
@@ -35,7 +34,6 @@ export function logout() {
 }
 
 export async function loadCurrentUser(force = false) {
-  console.log('loadCurrentUser')
   if (!isAuthenticated()) return null
 
   if (!currentUser.value || force) {
