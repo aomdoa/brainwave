@@ -4,7 +4,12 @@ Application that supports the capture and follow up on thoughts and ideas ensuri
 
 ## Structure
 
-Contains two prjects (packages/backend and packages/frontend) to provide the full solution and deployment. The backend focus will provide the API for access and operations on the data with the frontend providing the proper user interface that supports web and mobile access.
+Contains three projects (packages/shared, packages/backend and packages/frontend) to provide the full solution and deployment.
+
+The shared portion simply provides the input/output support for the validation of the data. The inputs simply try and provide expected values that will be transformed depending on the configuration
+being used. The output is guarenteed to have the expected data in the format required.
+
+The backend focus will provide the API for access and operations on the data with the frontend providing the proper user interface that supports web and mobile access.
 
 ### Verdaccio
 
@@ -18,35 +23,30 @@ To help support the build and usage of the @brainwave/shared I recommend using v
 
 ## Backend
 
-The backend is deployed with only exposure for the API portion of the service which is used by the UI for proper, safe and secure data access and changes.
-
-### Configuration (.env)
-
-Example can be found in packages/backend/config/brainwave.env
-
-| name                | default                     | description                                                                             |
-| ------------------- | --------------------------- | --------------------------------------------------------------------------------------- |
-| PORT                | 5005                        | The port the service will listen on                                                     |
-| LOG_LEVEL           | info                        | The level of logging to share for storage (error, info, debug)                          |
-| NODE_ENV            | production                  | Specify the current mode the service is being used in. Either production or development |
-| DATABASE_URL        | file:/opt/brainwave/prod.db | The service/location to use for the data storage                                        |
-| PASSWORD_MIN_LENGTH | 12                          | The minimum length of passwords for the users                                           |
+The backend is deployed with only exposure for the API portion of the service which is used by the UI for proper, safe and secure data access and changes. For full details access ./src/utils/config.ts
+for the full description and variables
 
 ### Dependencies
 
 #### Production
 
-| name                   | why                                                                      |
-| ---------------------- | ------------------------------------------------------------------------ |
-| bcryptjs               | Provides the crypt services needed for password management               |
-| better-sqlite3/sqlite3 | Current method for storing data and deployment help                      |
-| cors                   | Ensure security within the web application                               |
-| dotenv                 | Provide the consistent configuration setup to the service                |
-| express                | Consistent and expected setup for the REST                               |
-| jsonwebtoken           | Provides the security services to ensure access it managed               |
-| ms                     | Support for the jsonwebtoken timing                                      |
-| pino/pino-pretty       | Provide consistent logging format and structure                          |
-| zod                    | Provide support for processing .env with clear expected values and types |
+| name                   | why                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------- |
+| @brainwave/shared      | The data validation library for brainwave                                                   |
+| bcryptjs               | Provides the crypt services needed for password management                                  |
+| better-sqlite3/sqlite3 | Current method for storing data and deployment help                                         |
+| cors                   | Ensure security within the web application                                                  |
+| dotenv                 | Provide the consistent configuration setup to the service                                   |
+| express                | Consistent and expected setup for the REST                                                  |
+| jsonwebtoken           | Provides the security services to ensure access it managed                                  |
+| ms                     | Support for the jsonwebtoken timing                                                         |
+| node-cron              | Provides the configuration management and execution for scheduled (notification) activities |
+| nodemailer             | Support library to help setup and send emails                                               |
+| passport               | Provide third party authentication and user management (google)                             |
+| pino/pino-pretty       | Provide consistent logging format and structure                                             |
+| prisma                 | Provides the data management for the application without tying to a specific sql db         |
+| swagger                | Give access to the endpoint apis for review, understanding and testing                      |
+| zod                    | Provide support for processing .env with clear expected values and types                    |
 
 #### Development
 
@@ -72,7 +72,8 @@ Use the features of vue and vite to provide a clean mobile friendly application 
 
 ### Configuration
 
-TODO
+VITE_API_URL=https://brainwave.aomdoa.ca/api
+VITE_LOG_LEVEL=info
 
 ### Dependencies
 
