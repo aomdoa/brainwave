@@ -2,11 +2,20 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { Router } from 'express'
-import { createUser, getConfirmation, getUser, loginUser, sendConfirmation, updateUser } from '../services/user.service'
+import {
+  createUser,
+  getConfirmation,
+  getUser,
+  loginUser,
+  resetPassword,
+  sendConfirmation,
+  sendForgotPassword,
+  updateUser,
+} from '../services/user.service'
 import { signToken } from '../utils/jwt'
 import { authMiddleware, AuthRequest } from '../utils/express'
 import { config } from '../utils/config'
-import { UserConfig, UserServerUpdate } from '@brainwave/shared'
+import { UserConfig, UserUpdateRequest } from '@brainwave/shared'
 import passport from '../utils/passport'
 import { ForbiddenError } from '../utils/error'
 
@@ -85,6 +94,28 @@ export function registerUserRoutes(): Router {
     }
   })
 
+  router.post('/forgotPassword', async (req, res, next) => {
+    try {
+      const email = (req.body?.email as string) ?? undefined
+      await sendForgotPassword(email)
+      res.json({ status: 'sent' })
+    } catch (err) {
+      next(err)
+    }
+  })
+
+  router.post('/resetPassword', async (req, res, next) => {
+    try {
+      const token = (req.body?.token as string) ?? undefined
+      const password = (req.body?.password as string) ?? undefined
+      const confirmPassword = (req.body?.confirmPassword as string) ?? undefined
+      await resetPassword(token, password, confirmPassword)
+      res.json({ status: 'reset' })
+    } catch (err) {
+      next(err)
+    }
+  })
+
   // private
   router.get('/me', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
@@ -106,13 +137,26 @@ export function registerUserRoutes(): Router {
 
   router.patch('/me', authMiddleware, async (req: AuthRequest, res, next) => {
     try {
-      const userData = {
-        userId: req.userId,
-        ...req.body,
-      } as UserServerUpdate
-
-      const user = await updateUser(userData)
+      const userData = req.body as UserUpdateRequest
+      const user = await updateUser(req.userId ?? 0, userData)
       res.json({ ...user })
+    } catch (err) {
+      next(err)
+    }
+  })
+
+  router.patch('/token', authMiddleware, async (req: AuthRequest, res, next) => {
+    try {
+      const userId = req.userId ?? 0
+      if (!userId) {
+        throw new ForbiddenError('Not authenticated')
+      }
+      const user = await getUser(userId)
+      if (!user || !user.isConfirmed) {
+        throw new ForbiddenError('User not found or not confirmed')
+      }
+      const token = signToken({ userId: user.userId }, user.authLength ?? config.JWT_EXPIRES_IN)
+      res.json({ token })
     } catch (err) {
       next(err)
     }

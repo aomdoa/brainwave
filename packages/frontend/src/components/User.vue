@@ -3,7 +3,7 @@
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
 import { ref, onMounted, watch, computed } from 'vue'
-import { userClientUpdateSchema, type UserClientUpdate, userAuthLength } from '@brainwave/shared'
+import { userAuthLength, userUpdateSchema, type UserUpdateRequest } from '@brainwave/shared'
 import { getAuthConfig, updateUser } from '../api'
 import { router } from '../router'
 import { currentUser, loadCurrentUser, logout } from '../store/user.store'
@@ -13,15 +13,15 @@ const form = ref({
   authLength: '6h',
   password: '',
   confirmPassword: '',
-} as UserClientUpdate)
+} as UserUpdateRequest)
 const status = ref('loading')
-const schema = ref<ReturnType<typeof userClientUpdateSchema> | null>(null)
+const schema = ref<ReturnType<typeof userUpdateSchema> | null>(null)
 const errors = ref<Record<string, string>>({})
 const originalForm = ref<any>(null)
 
 onMounted(async () => {
   const config = await getAuthConfig()
-  schema.value = userClientUpdateSchema(config)
+  schema.value = userUpdateSchema(config)
   await loadCurrentUser()
   status.value = 'loaded'
 })

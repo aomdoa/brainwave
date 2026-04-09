@@ -8,32 +8,26 @@ const relationType = ['RELATED', 'CAUSES', 'CONTRADICTS', 'SUPPORTS', 'DERIVES_F
 export type ThoughtRelationType = (typeof relationType)[number]
 
 // core
-export const thoughtRelationBaseSchema = z.object({
+export const thoughtRelationSchema = z.object({
   thoughtRelationId: z.number().positive(),
   relationType: z.enum(relationType),
-  // notes: z.string().optional(), TODO - do we need/want notes on the relation?
   createdAt: z.iso.datetime(),
   thoughtOneId: z.number().positive(),
   thoughtTwoId: z.number().positive(),
 })
 
-export const thoughtRelationServerSchema = thoughtRelationBaseSchema.strict()
-export const thoughtRelationClientSchema = thoughtRelationBaseSchema.strip()
-export type ThoughtRelationServer = z.infer<typeof thoughtRelationServerSchema>
-export type ThoughtRelationClient = z.infer<typeof thoughtRelationClientSchema>
+export const thoughtRelationServerSchema = thoughtRelationSchema.strict()
+export const thoughtRelationClientSchema = thoughtRelationSchema.strip()
+export type ThoughtRelationServer = z.output<typeof thoughtRelationServerSchema>
+export type ThoughtRelationClient = z.output<typeof thoughtRelationClientSchema>
 
 // creation of relations
-export const thoughtRelationBaseCreateSchema = z.object({
+export const thoughtRelationCreateSchema = z.object({
   relationType: z.enum(relationType),
-  notes: z.string().optional(),
   thoughtOneId: z.number().positive(),
   thoughtTwoId: z.number().positive(),
 })
-
-export const thoughtRelationServerCreateSchema = thoughtRelationBaseCreateSchema
-export const thoughtRelationClientCreateSchema = thoughtRelationBaseCreateSchema
-export type ThoughtRelationServerCreate = z.infer<typeof thoughtRelationServerCreateSchema>
-export type ThoughtRelationClientCreate = z.infer<typeof thoughtRelationClientCreateSchema>
+export type ThoughtRelationCreate = z.input<typeof thoughtRelationCreateSchema>
 
 // simplified relation
 export type ThoughtSimplifiedRelation = {

@@ -28,6 +28,14 @@ export default defineConfig(
       quotes: ['error', 'single'],
       indent: ['error', 2],
       semi: ['error', 'never'],
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          varsIgnorePattern: '^_',
+          argsIgnorePattern: '^_',
+        },
+      ],
     },
   },
   prettier

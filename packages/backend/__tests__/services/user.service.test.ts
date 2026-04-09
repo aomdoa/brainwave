@@ -12,10 +12,13 @@ import {
   loginUser,
   sendConfirmation,
   updateUser,
+  sendForgotPassword,
+  resetPassword,
 } from '../../src/services/user.service'
 import { ConflictError, NotFoundError, ValidationError } from '../../src/utils/error'
-import { sendConfirmationEmail } from '../../src/utils/email'
+import { sendConfirmationEmail, sendForgotPasswordEmail } from '../../src/utils/email'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { UserValidLength } from '@brainwave/shared'
 
 jest.mock('../../src/utils/prisma', () => ({
@@ -29,6 +32,7 @@ jest.mock('bcryptjs', () => ({
 
 jest.mock('../../src/utils/email', () => ({
   sendConfirmationEmail: jest.fn(),
+  sendForgotPasswordEmail: jest.fn(),
 }))
 
 jest.mock('../../src/utils/logger', () => ({
@@ -200,10 +204,9 @@ describe('user.service', () => {
 
   describe('updateUser', () => {
     it('full user update', async () => {
-      const update = { userId: 1, ...input }
       mockPrisma.user.findUnique.mockResolvedValue(output as any)
       mockPrisma.user.update.mockResolvedValue(output as any)
-      const user = await updateUser(update)
+      const user = await updateUser(1, input)
       expect(+user.updatedAt).toBeGreaterThan(+date)
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({ where: { userId: 1 } })
       expect(mockPrisma.user.update).toHaveBeenLastCalledWith({
@@ -219,7 +222,7 @@ describe('user.service', () => {
     it('no update', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(output as any)
       mockPrisma.user.update.mockResolvedValue(output as any)
-      const user = await updateUser({ userId: 1, authLength: '1h' })
+      const user = await updateUser(1, { authLength: '1h' })
       expect(+user.updatedAt).toBeGreaterThan(+date)
       expect(mockPrisma.user.update).toHaveBeenLastCalledWith({
         where: { userId: 1 },
@@ -233,8 +236,151 @@ describe('user.service', () => {
 
     it('no access', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null)
-      await expect(updateUser({ name: '1' } as any)).rejects.toThrow(ValidationError)
-      await expect(updateUser({ userId: 1, authLength: '1h' })).rejects.toThrow(NotFoundError)
+      await expect(updateUser(1, { name: '1' } as any)).rejects.toThrow(ValidationError)
+      await expect(updateUser(1, { authLength: '1h' })).rejects.toThrow(NotFoundError)
+    })
+  })
+
+  describe('sendForgotPassword', () => {
+    const email = 'email@email.com'
+
+    it('missing email', async () => {
+      const result = await sendForgotPassword(null as any)
+      expect(result).toBeFalsy()
+      expect(mockLogger.debug).toHaveBeenCalledWith('Attempt to send forgot password email with missing email')
+    })
+
+    it('user not found', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null)
+
+      const result = await sendForgotPassword(email)
+
+      expect(result).toBeFalsy()
+      expect(mockLogger.warn).toHaveBeenCalledWith(`Attempt to send forgot password for non-existent email ${email}`)
+    })
+
+    it('existing unexpired request', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...output,
+        forgotPassExpiry: new Date(Date.now() + 100000),
+      } as any)
+
+      const result = await sendForgotPassword(email)
+
+      expect(result).toBeFalsy()
+      expect(mockLogger.warn).toHaveBeenCalledWith(`Attempt to send forgot password for ${email} with existing request`)
+    })
+
+    it('successful send', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...output,
+        forgotPassExpiry: null,
+      } as any)
+
+      mockPrisma.user.update.mockResolvedValue({} as any)
+
+      jest.spyOn(crypto, 'randomBytes').mockReturnValue(Buffer.from('abc123'))
+
+      const mockSend = sendForgotPasswordEmail as jest.Mock
+      mockSend.mockResolvedValue({})
+
+      const result = await sendForgotPassword(email)
+
+      expect(result).toBeTruthy()
+      expect(mockPrisma.user.update).toHaveBeenCalled()
+      expect(mockSend).toHaveBeenCalledWith(email, expect.any(String))
+      expect(mockLogger.debug).toHaveBeenCalledWith(expect.stringContaining(`Sent forgot password email to ${email}`))
+    })
+
+    it('failed email send', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...output,
+        forgotPassExpiry: null,
+      } as any)
+
+      mockPrisma.user.update.mockResolvedValue({} as any)
+
+      jest.spyOn(crypto, 'randomBytes').mockReturnValue(Buffer.from('abc123'))
+
+      const mockSend = sendForgotPasswordEmail as jest.Mock
+      mockSend.mockRejectedValue(new Error('failed'))
+
+      const result = await sendForgotPassword(email)
+
+      expect(result).toBeFalsy()
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Unable to send forgot password email'))
+    })
+  })
+
+  describe('resetPassword', () => {
+    const token = 'valid-token'
+
+    it('missing token or password', async () => {
+      const result = await resetPassword(null as any, 'pass', 'pass')
+      expect(result).toBeFalsy()
+      expect(mockLogger.debug).toHaveBeenCalledWith('Attempt to reset password with missing token or password')
+    })
+
+    it('user not found', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue(null)
+
+      const result = await resetPassword(token, 'pass', 'pass')
+
+      expect(result).toBeFalsy()
+      expect(mockLogger.warn).toHaveBeenCalledWith(`Invalid attempt to reset password with token ${token}`)
+    })
+
+    it('expired token', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue({
+        ...output,
+        forgotPassToken: token,
+        forgotPassExpiry: new Date(Date.now() - 1000),
+      } as any)
+
+      const result = await resetPassword(token, 'pass', 'pass')
+
+      expect(result).toBeFalsy()
+    })
+
+    it('invalid password schema', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue({
+        ...output,
+        forgotPassToken: token,
+        forgotPassExpiry: new Date(Date.now() + 100000),
+      } as any)
+
+      const result = await resetPassword(token, 'bad', 'mismatch')
+
+      expect(result).toBeFalsy()
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid password provided for reset password')
+      )
+    })
+
+    it('successful reset', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue({
+        ...output,
+        forgotPassToken: token,
+        forgotPassExpiry: new Date(Date.now() + 100000),
+      } as any)
+
+      mockPrisma.user.update.mockResolvedValue({} as any)
+
+      jest.spyOn(bcrypt, 'genSaltSync').mockReturnValue('salt' as any)
+      jest.spyOn(bcrypt, 'hashSync').mockReturnValue('hashed' as any)
+
+      const result = await resetPassword(token, 'password', 'password')
+
+      expect(result).toBeTruthy()
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { userId: 1 },
+        data: {
+          password: 'hashed',
+          forgotPassToken: null,
+          forgotPassExpiry: null,
+        },
+      })
+      expect(mockLogger.debug).toHaveBeenCalledWith(`Reset password for user ${output.email}`)
     })
   })
 })

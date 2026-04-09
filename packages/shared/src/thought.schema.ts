@@ -3,7 +3,7 @@
  */
 import { z } from 'zod'
 import { searchLinksSchema, searchPageSchema, SearchResultConfig, searchSchema } from './search.schema'
-import { tagBaseSchema, tagClientSchema, tagServerSchema } from './tag.schema'
+import { tagSchema, tagClientSchema, tagServerSchema } from './tag.schema'
 
 export interface ThoughtConfig {
   minTitleLength: number
@@ -18,7 +18,7 @@ export const THOUGHT_SEARCH_FILTERS = ['status', 'createdAt', 'updatedAt', 'last
 export const THOUGHT_SEARCH_ORDERS = ['title', ...THOUGHT_SEARCH_FILTERS]
 
 // core thoughts
-export const thoughtBaseSchema = z.object({
+export const thoughtSchema = z.object({
   thoughtId: z.number().positive(),
   title: z.string(),
   body: z.string(),
@@ -27,52 +27,37 @@ export const thoughtBaseSchema = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
   lastFollowUp: z.iso.datetime().nullable(),
-  tags: z.array(tagBaseSchema).optional(),
+  tags: z.array(tagSchema).default([]),
 })
-
-export const thoughtServerSchema = thoughtBaseSchema
+export const thoughtServerSchema = thoughtSchema
   .extend({
     userId: z.number().positive(),
-    tags: z.array(tagServerSchema).optional(),
   })
   .strict()
-
-export const thoughtClientSchema = thoughtBaseSchema.extend({ tags: z.array(tagClientSchema).optional() }).strip()
-export type ThoughtServer = z.infer<typeof thoughtServerSchema>
-export type ThoughtClient = z.infer<typeof thoughtClientSchema>
+export const thoughtClientSchema = thoughtSchema.strip()
+export type ThoughtServer = z.output<typeof thoughtServerSchema>
+export type ThoughtClient = z.output<typeof thoughtClientSchema>
 
 // creation of thoughts
-export const thoughtBaseCreateSchema = (config: ThoughtConfig) =>
+export const thoughtCreateSchema = (config: ThoughtConfig) =>
   z.object({
     title: z.string().min(config.minTitleLength).max(config.maxTitleLength).trim(),
     body: z.string().min(config.minBodyLength).max(config.maxBodyLength).trim(),
     status: z.enum(status),
-    nextReminder: z.iso.datetime().optional().nullable(),
+    nextReminder: z.iso.datetime().nullable().optional(),
   })
-
-export const thoughtServerCreateSchema = (config: ThoughtConfig) =>
-  thoughtBaseCreateSchema(config).extend({
-    userId: z.number().positive(),
-  })
-
-export const thoughtClientCreateSchema = thoughtBaseCreateSchema
-export type ThoughtServerCreate = z.infer<ReturnType<typeof thoughtServerCreateSchema>>
-export type ThoughtClientCreate = z.infer<ReturnType<typeof thoughtClientCreateSchema>>
+export type ThoughtCreate = z.input<ReturnType<typeof thoughtCreateSchema>>
 
 // update of the thoughts
-export const thoughtBaseUpdateSchema = (config: ThoughtConfig) =>
-  thoughtBaseCreateSchema(config).partial().extend({
+export const thoughtUpdateSchema = (config: ThoughtConfig) =>
+  z.object({
     thoughtId: z.number().positive(),
+    title: z.string().min(config.minTitleLength).max(config.maxTitleLength).trim().optional(),
+    body: z.string().min(config.minBodyLength).max(config.maxBodyLength).trim().optional(),
+    status: z.enum(status).optional(),
+    nextReminder: z.iso.datetime().nullable().optional(),
   })
-
-export const thoughtServerUpdateSchema = (config: ThoughtConfig) =>
-  thoughtBaseUpdateSchema(config).extend({
-    userId: z.number().positive(),
-  })
-
-export const thoughtClientUpdateSchema = thoughtBaseUpdateSchema
-export type ThoughtServerUpdate = z.infer<ReturnType<typeof thoughtServerUpdateSchema>>
-export type ThoughtClientUpdate = z.infer<ReturnType<typeof thoughtClientUpdateSchema>>
+export type ThoughtUpdate = z.input<ReturnType<typeof thoughtUpdateSchema>>
 
 // searching thoughts
 export const thoughtSearchResultsSchema = z
@@ -92,5 +77,5 @@ export const thoughtSearchParamsSchema = (config: SearchResultConfig) =>
       .optional(),
   })
 
-export type ThoughtSearchResults = z.infer<typeof thoughtSearchResultsSchema>
-export type ThoughtSearchParams = z.infer<ReturnType<typeof thoughtSearchParamsSchema>>
+export type ThoughtSearchResults = z.output<typeof thoughtSearchResultsSchema>
+export type ThoughtSearchParams = z.output<ReturnType<typeof thoughtSearchParamsSchema>>

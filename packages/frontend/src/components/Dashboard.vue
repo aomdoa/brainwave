@@ -2,31 +2,25 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { ref, onMounted, reactive, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { refDebounced, useBreakpoints } from '@vueuse/core'
 import { type TagClient, type ThoughtClient } from '@brainwave/shared'
 import { getTags, getThoughts } from '../api'
 import { router } from '../router'
 import dayjs from 'dayjs'
+import { useThoughtFilters } from '../composables/useThoughtFilters'
 import { currentUser, loadCurrentUser } from '../store/user.store'
 
 let tags: TagClient[] = []
 const pageSize = 20
-const search = ref('')
 const statuses = ref([
   { name: 'Active', value: 'ACTIVE' },
   { name: 'Closed', value: 'CLOSED' },
 ])
-const selectedStatus = ref(statuses.value[0])
-const tag = ref<TagClient | null>(null)
 const thoughts = ref<ThoughtClient[]>([])
-const pagination = reactive({
-  currentPage: 1,
-  currentPageSize: 0,
-  orderBy: 'lastFollowUp',
-  orderDesc: false,
-})
 const totalPages = ref(0)
+
+const { search, selectedStatus, tag, pagination, hydrateFromQuery, updateQuery } = useThoughtFilters(() => tags)
 
 const breakpoints = useBreakpoints({
   mobile: 768,
@@ -35,10 +29,18 @@ const isMobile = breakpoints.smaller('mobile')
 
 const debouncedSearch = refDebounced(search, 400)
 watch(debouncedSearch, () => {
-  onSearch()
+  pagination.currentPage = 1
+  updateQuery()
+  fetchThoughts()
 })
 
 const onSearch = () => {
+  fetchThoughts()
+}
+
+const selectionChange = () => {
+  pagination.currentPage = 1
+  updateQuery()
   fetchThoughts()
 }
 
@@ -46,6 +48,7 @@ const nextPage = () => {
   const newPage = pagination.currentPage + 1
   if (newPage <= totalPages.value) {
     pagination.currentPage = newPage
+    updateQuery()
     fetchThoughts()
   }
 }
@@ -54,18 +57,22 @@ const prevPage = () => {
   const newPage = pagination.currentPage - 1
   if (newPage > 0) {
     pagination.currentPage = newPage
+    updateQuery()
     fetchThoughts()
   }
 }
 
 const sortBy = (name: string) => {
   pagination.currentPage = 1
+
   if (pagination.orderBy === name) {
     pagination.orderDesc = !pagination.orderDesc
   } else {
     pagination.orderBy = name
     pagination.orderDesc = true
   }
+
+  updateQuery()
   fetchThoughts()
 }
 
@@ -75,10 +82,6 @@ const create = () => {
 
 const goToThought = (id: number) => {
   router.push(`/thoughts/${id}`)
-}
-
-const selectionChange = () => {
-  fetchThoughts()
 }
 
 const fetchThoughts = async () => {
@@ -101,7 +104,6 @@ const fetchThoughts = async () => {
     tagId: tag.value?.tagId ? [tag.value.tagId] : undefined,
   })
   pagination.currentPage = page.current
-  pagination.currentPageSize = page.size
   totalPages.value = page.totalPages
   thoughts.value = fetchedThoughts
 }
@@ -109,6 +111,13 @@ const fetchThoughts = async () => {
 onMounted(async () => {
   await loadCurrentUser()
   tags = await getTags()
+
+  if (!selectedStatus.value) {
+    selectedStatus.value = statuses.value[0]
+  }
+
+  hydrateFromQuery()
+
   await fetchThoughts()
 })
 </script>
@@ -170,7 +179,10 @@ onMounted(async () => {
           v-for="thought in thoughts"
           :key="thought.thoughtId"
           @click="goToThought(thought.thoughtId)"
-          class="clickable-row"
+          :class="[
+            'clickable-row',
+            { todo: thought.nextReminder !== null && new Date(thought.nextReminder) < new Date() },
+          ]"
         >
           <td>{{ thought.title }}</td>
           <td v-if="!isMobile" style="width: 18ch">{{ dayjs(thought.updatedAt).format('YYYY-MM-DD HH:mm') }}</td>
@@ -239,5 +251,23 @@ onMounted(async () => {
 }
 .controls .p-select-label {
   font-size: 0.8rem;
+}
+.todo {
+  background-color: #fff3cd;
+}
+
+@media (prefers-color-scheme: dark) {
+  .todo {
+    background-color: #3c597e;
+  }
+
+  .clickable-row:hover {
+    background-color: #51657e;
+  }
+
+  .p-select,
+  .p-multiselect {
+    background-color: #2c2c39;
+  }
 }
 </style>

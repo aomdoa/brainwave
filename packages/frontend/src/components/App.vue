@@ -32,7 +32,7 @@ watchEffect(() => {
   <PrimevuePreload />
   <div class="header">
     <div>
-      <img src="/brainwave.png" class="logo" alt="Brainwave logo" />
+      <div class="logo"></div>
       <a href="/" class="title">Brainwave</a>
     </div>
     <div v-if="loggedIn">
@@ -95,12 +95,23 @@ watchEffect(() => {
 }
 
 .logo {
+  display: block;
   height: 4rem;
+  width: 4rem;
+  background-image: url('/brainwave.png');
+  background-size: contain;
+  background-repeat: no-repeat;
 }
 
 .title {
   font-size: 2rem;
   font-weight: bold;
   color: #646cff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .logo {
+    background-image: url('/brainwave-dark.png');
+  }
 }
 </style>

@@ -22,9 +22,9 @@ import {
 import DateTime from './DateTime.vue'
 import { router } from '../router'
 import {
+  thoughtCreateSchema,
   type TagClient,
   type ThoughtClient,
-  thoughtClientCreateSchema,
   type ThoughtHistoryClient,
   type ThoughtStatus,
 } from '@brainwave/shared'
@@ -51,10 +51,14 @@ const thoughtRelations = ref<ThoughtClient[]>([])
 const thoughtSuggestions = ref<ThoughtClient[]>([])
 const thoughtHistory = ref<ThoughtHistoryClient[]>([])
 const showHistory = ref(false)
-const schema = ref<ReturnType<typeof thoughtClientCreateSchema> | null>(null)
+const schema = ref<ReturnType<typeof thoughtCreateSchema> | null>(null)
 const errors = ref<Record<string, string>>({})
 const confirm = useConfirm()
+
 // functions
+const tomorrow = new Date()
+tomorrow.setDate(tomorrow.getDate() + 1)
+tomorrow.setHours(0, 0, 0, 0)
 const thoughtId = ref(Number(route.params.thoughtId))
 
 watch(
@@ -176,12 +180,24 @@ const sortTags = (tags: TagClient[]): TagClient[] => {
 async function searchThoughts(event: any) {
   const query = event.query?.trim()
 
-  if (!query || query.length < 3) {
-    thoughtSuggestions.value = []
-    return
-  }
-
-  const { thoughts } = await getThoughts({ search: query, page: 1, size: 50 })
+  console.log(`query is ${JSON.stringify(query)}`)
+  const { thoughts } = await getThoughts({
+    search: query,
+    filter: [
+      {
+        field: 'status',
+        operator: 'eq',
+        value: 'ACTIVE',
+        logical: 'and',
+      },
+    ],
+    page: 1,
+    size: 50,
+    orderBy: {
+      field: 'updatedAt',
+      direction: 'desc',
+    },
+  })
   thoughtSuggestions.value = thoughts.filter((t) => t.thoughtId !== thought.value.thoughtId)
 }
 
@@ -203,7 +219,7 @@ const fetchThought = async (thoughtId: number) => {
   try {
     tags = sortTags(await getTags())
     const config = await getThoughtConfig()
-    schema.value = thoughtClientCreateSchema(config)
+    schema.value = thoughtCreateSchema(config)
     if (thoughtId > 0) {
       const thoughtData = await getThoughtById(thoughtId)
       thought.value = thoughtData
@@ -290,6 +306,7 @@ onMounted(async () => {
         <label for="relations">Related Thoughts:</label>
 
         <AutoComplete
+          ref="thoughtAutoComplete"
           v-model="thoughtRelations"
           multiple
           optionLabel="title"
@@ -297,7 +314,8 @@ onMounted(async () => {
           :suggestions="thoughtSuggestions"
           placeholder="Search thoughts"
           @complete="searchThoughts"
-          :minLength="3"
+          :minLength="0"
+          completeOnFocus
         >
           <template #chip="slotProps">
             <span class="p-chip-text p-d-flex p-ai-center">
@@ -320,7 +338,7 @@ onMounted(async () => {
       </div>
       <div class="form-group">
         <label for="nextReminder">Next Reminder: </label>
-        <DateTime id="nextReminder" v-model="nextReminder" />
+        <DateTime id="nextReminder" v-model="nextReminder" :minDate="tomorrow" :manualInput="false" showClear />
         <div v-if="errors.nextReminder" class="field-error">
           {{ errors.nextReminder }}
         </div>
@@ -372,6 +390,7 @@ onMounted(async () => {
   color: black;
   text-decoration: none;
   cursor: pointer;
+  margin-right: 0.5em;
 }
 
 .chip-link:hover {
@@ -381,5 +400,21 @@ onMounted(async () => {
 .history-item {
   border-top: 1px solid black;
   margin-top: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .p-inputtext,
+  .p-component,
+  .p-datepicker,
+  .p-select,
+  .p-multiselect,
+  .p-autocomplete,
+  .p-autocomplete-input-multiple {
+    background-color: #2c2c39;
+  }
+
+  .chip-link {
+    color: white;
+  }
 }
 </style>

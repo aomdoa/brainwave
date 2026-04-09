@@ -4,26 +4,27 @@
 import axios, { AxiosError, type AxiosResponse } from 'axios'
 import config from './utils/config'
 import { router } from './router'
-import type {
-  SearchClientSchema,
-  SearchLinks,
-  SearchPage,
-  TagClient,
-  ThoughtClient,
-  ThoughtClientCreate,
-  ThoughtClientUpdate,
-  ThoughtConfig,
-  ThoughtHistoryClient,
-  ThoughtSearchParams,
-  ThoughtSearchResults,
-  ThoughtSimplifiedRelation,
-  ThoughtStatus,
-  UserClient,
-  UserClientCreate,
-  UserClientUpdate,
-  UserConfig,
+import {
+  type SearchClientSchema,
+  type SearchLinks,
+  type SearchPage,
+  type TagClient,
+  type ThoughtClient,
+  type ThoughtConfig,
+  type ThoughtCreate,
+  type ThoughtHistoryClient,
+  type ThoughtSearchParams,
+  type ThoughtSearchResults,
+  type ThoughtSimplifiedRelation,
+  type ThoughtStatus,
+  type ThoughtUpdate,
+  type UserClient,
+  type UserConfig,
+  type UserCreateRequest,
+  type UserUpdateRequest,
 } from '@brainwave/shared'
 import type { User } from './store/user.store'
+import { jwtDecode } from 'jwt-decode'
 
 const api = axios.create({ baseURL: config.VITE_API_URL })
 
@@ -97,8 +98,20 @@ export async function login(email: string, password: string): Promise<User> {
   }
 }
 
+export async function refreshToken(): Promise<User | void> {
+  try {
+    const response = await api.patch('/user/token')
+    return updateToken(response.data.token)
+  } catch (err) {
+    console.error('Failed to refresh token...', err)
+  }
+}
+
 export async function updateToken(token: string): Promise<User> {
+  const decoded = jwtDecode<{ iat: number; exp: number }>(token)
+  const refresh = decoded.iat + (decoded.exp - decoded.iat) / 2
   localStorage.setItem('token', token)
+  localStorage.setItem('refreshTokenAt', `${refresh}`)
   return me()
 }
 
@@ -118,7 +131,7 @@ export async function getAuthConfig(): Promise<UserConfig> {
 }
 
 // Register the new user
-export async function registerUser(registration: UserClientCreate): Promise<User> {
+export async function registerUser(registration: UserCreateRequest): Promise<User> {
   const response = await api.post('/user/register', registration)
   if (response.statusText !== 'OK') {
     throw new Error(`Failed to register user: ${response.data}`)
@@ -154,13 +167,13 @@ export async function getThoughtById(thoughtId: number): Promise<ThoughtClient> 
   return response.data
 }
 
-export async function saveThought(thought: ThoughtClientCreate | ThoughtClientUpdate): Promise<ThoughtClient> {
+export async function saveThought(thought: ThoughtCreate | ThoughtUpdate): Promise<ThoughtClient> {
   let response: AxiosResponse<ThoughtClient>
-  const updateThought = thought as ThoughtClientUpdate
+  const updateThought = thought as ThoughtUpdate
   if (updateThought.thoughtId != null) {
     response = await api.patch<ThoughtClient>(`thoughts/${updateThought.thoughtId}`, updateThought)
   } else {
-    response = await api.post<ThoughtClient>('thoughts/', thought as ThoughtClientCreate)
+    response = await api.post<ThoughtClient>('thoughts/', thought as ThoughtCreate)
   }
   if (response.statusText !== 'OK') {
     throw new Error(`Failed saving thought: ${response.data}`)
@@ -250,12 +263,20 @@ export async function confirmAccount(email: string, token: string): Promise<bool
   return true
 }
 
-export async function updateUser(user: UserClientUpdate): Promise<UserClient> {
+export async function updateUser(user: UserUpdateRequest): Promise<UserClient> {
   const response = await api.patch<UserClient>(`user/me`, user)
   if (response.statusText !== 'OK') {
     throw new Error(`Unable to update user: ${response.data}`)
   }
   return response.data
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  await api.post(`user/forgotPassword`, { email })
+}
+
+export async function resetPassword(token: string, password: string, confirmPassword: string): Promise<void> {
+  await api.post(`user/resetPassword`, { token, password, confirmPassword })
 }
 
 // Report error

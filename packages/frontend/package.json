@@ -2,7 +2,7 @@
   "name": "@brainwave/frontend",
   "rpmName": "brainwave-frontend",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "clean": "rimraf ./dist",
@@ -12,25 +12,26 @@
     "package": "node _scripts/package.mjs"
   },
   "dependencies": {
-    "@brainwave/shared": "1.0.0",
+    "@brainwave/shared": "1.1.0",
     "@primeuix/themes": "^2.0.3",
     "@vueuse/core": "^14.2.1",
-    "axios": "^1.13.5",
+    "axios": "^1.14.0",
     "dayjs": "^1.11.19",
+    "jwt-decode": "^4.0.0",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.4",
     "vite-plugin-pwa": "^1.2.0",
-    "vue": "^3.5.25",
+    "vue": "^3.5.32",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
+    "@types/node": "^25.5.2",
     "@types/vue-router": "^2.0.0",
     "@vitejs/plugin-vue": "^6.0.2",
-    "@vue/tsconfig": "^0.8.1",
+    "@vue/tsconfig": "^0.9.1",
     "rimraf": "^6.1.3",
-    "typescript": "~5.9.3",
-    "vite": "^8.0.0-beta.14",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.5",
     "vue-tsc": "^3.1.5"
   },
   "overrides": {
