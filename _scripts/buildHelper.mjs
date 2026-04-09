@@ -2,9 +2,7 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { writeFileSync } from 'node:fs'
 import { execSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
 
 export function getGitSha() {
   try {
