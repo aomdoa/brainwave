@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { console } from 'node:inspector'
+import { isRelease } from '../../../_scripts/buildHelper.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const pkg = JSON.parse(readFileSync(path.join(__dirname, '../package.json')))
@@ -20,8 +21,8 @@ if (existsSync(buildDir)) {
 }
 
 const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 12)
-const snapshotVersion = `${version}.SNAPSHOT.${timestamp}`
-const outputFile = path.join(buildDir, `${name}-${snapshotVersion}.rpm`)
+const packageVersion = isRelease() ? version : `${version}.SNAPSHOT.${timestamp}`
+const outputFile = path.join(buildDir, `${name}-${packageVersion}.rpm`)
 
 // stage the files for build
 const optBrainwaveDir = path.join(packageDir, 'opt', 'brainwave')
@@ -46,7 +47,7 @@ const args = [
   '-t', 'rpm',
   '-p', outputFile,
   '-n', name,
-  '-v', snapshotVersion,
+  '-v', packageVersion,
   '--architecture', 'all',
   '--iteration', '1',
   '--rpm-user', 'brainwave',

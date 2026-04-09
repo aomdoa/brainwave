@@ -2,31 +2,8 @@
 /**
  * @copyright 2026 David Shurgold <aomdoa@gmail.com>
  */
-import { writeFileSync } from 'node:fs'
-import { execSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
-
-function getGitSha() {
-  try {
-    return execSync('git rev-parse --short HEAD').toString().trim()
-  } catch {
-    return 'unknown'
-  }
-}
-
-export function isRelease() {
-  try {
-    const output = execSync('git tag --points-at HEAD', {
-      stdio: ['ignore', 'pipe', 'ignore'],
-    })
-      .toString()
-      .trim()
-
-    return output.length > 0
-  } catch {
-    return false
-  }
-}
+import { writeFileSync, readFileSync } from 'node:fs'
+import { isRelease, getGitSha } from '../../../_scripts/buildHelper.mjs'
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
 const version = pkg.version + (isRelease() ? '' : '-SNAPSHOT')
