@@ -145,5 +145,22 @@ export function registerUserRoutes(): Router {
     }
   })
 
+  router.patch('/token', authMiddleware, async (req: AuthRequest, res, next) => {
+    try {
+      const userId = req.userId ?? 0
+      if (!userId) {
+        throw new ForbiddenError('Not authenticated')
+      }
+      const user = await getUser(userId)
+      if (!user || !user.isConfirmed) {
+        throw new ForbiddenError('User not found or not confirmed')
+      }
+      const token = signToken({ userId: user.userId }, user.authLength ?? config.JWT_EXPIRES_IN)
+      res.json({ token })
+    } catch (err) {
+      next(err)
+    }
+  })
+
   return router
 }

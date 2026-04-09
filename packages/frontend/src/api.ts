@@ -24,6 +24,7 @@ import {
   type UserUpdateRequest,
 } from '@brainwave/shared'
 import type { User } from './store/user.store'
+import { jwtDecode } from 'jwt-decode'
 
 const api = axios.create({ baseURL: config.VITE_API_URL })
 
@@ -97,8 +98,20 @@ export async function login(email: string, password: string): Promise<User> {
   }
 }
 
+export async function refreshToken(): Promise<User | void> {
+  try {
+    const response = await api.patch('/user/token')
+    return updateToken(response.data.token)
+  } catch (err) {
+    console.error('Failed to refresh token...', err)
+  }
+}
+
 export async function updateToken(token: string): Promise<User> {
+  const decoded = jwtDecode<{ iat: number; exp: number }>(token)
+  const refresh = decoded.iat + (decoded.exp - decoded.iat) / 2
   localStorage.setItem('token', token)
+  localStorage.setItem('refreshTokenAt', `${refresh}`)
   return me()
 }
 
