@@ -390,6 +390,7 @@ onMounted(async () => {
   color: black;
   text-decoration: none;
   cursor: pointer;
+  margin-right: 0.5em;
 }
 
 .chip-link:hover {
