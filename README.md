@@ -22,7 +22,7 @@ The backend is deployed with only exposure for the API portion of the service wh
 
 ### Configuration (.env)
 
-Example can be found in packages/backend/config/brainwave.env
+Example can be found in packages/backend/config/brainwave.env - review there.
 
 | name                | default                     | description                                                                             |
 | ------------------- | --------------------------- | --------------------------------------------------------------------------------------- |
