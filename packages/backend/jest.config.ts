@@ -7,6 +7,7 @@ const config: Config = {
   collectCoverage: true,
   coverageDirectory: 'coverage',
   coverageProvider: 'v8',
+  setupFiles: ['<rootDir>/__tests__/jest.setup.ts'],
   // coverage rule only applies to ./services
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/*', '!src/routes/**', '!src/utils/**'],
   coverageThreshold: {
@@ -21,6 +22,14 @@ const config: Config = {
     enableGlobally: true,
   },
   restoreMocks: true,
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: 'tsconfig.test.json',
+      },
+    ],
+  },
 }
 
 export default config
