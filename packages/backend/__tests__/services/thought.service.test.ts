@@ -74,7 +74,7 @@ describe('thought.service', () => {
     it('invalid input', async () => {
       const bad = { ...input, title: '' }
 
-      await expect(createThought(bad as any)).rejects.toThrow(ValidationError)
+      await expect(createThought(1, bad as any)).rejects.toThrow(ValidationError)
       expect(mockPrisma.thought.create).not.toHaveBeenCalled()
     })
   })
@@ -103,7 +103,7 @@ describe('thought.service', () => {
     it('invalid input', async () => {
       const bad = { ...input, title: '' }
 
-      await expect(updateThought(bad as any)).rejects.toThrow(ValidationError)
+      await expect(updateThought(1, bad as any)).rejects.toThrow(ValidationError)
       expect(mockPrisma.thought.update).not.toHaveBeenCalled()
     })
 

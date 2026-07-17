@@ -71,7 +71,12 @@ describe('user.service', () => {
   describe('createUser', () => {
     it('successful creation', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null)
-      mockPrisma.user.create.mockResolvedValue({ ...output, password: 'salted password' })
+      mockPrisma.user.create.mockResolvedValue({
+        ...output,
+        password: 'salted password',
+        forgotPassToken: null,
+        forgotPassExpiry: null,
+      })
 
       const user = await createUser(input)
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({ where: { email: input.email } })
@@ -92,7 +97,12 @@ describe('user.service', () => {
     })
 
     it('already exists', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ ...output, password: 'password' })
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...output,
+        password: 'password',
+        forgotPassToken: null,
+        forgotPassExpiry: null,
+      })
       await expect(createUser(input)).rejects.toThrow(ConflictError)
     })
   })
@@ -100,7 +110,12 @@ describe('user.service', () => {
   describe('loginUser', () => {
     const loginData = { email: 'email@email.com', password: 'password' }
     it('successful login', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ ...output, password: 'crypted pass' })
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...output,
+        password: 'crypted pass',
+        forgotPassToken: null,
+        forgotPassExpiry: null,
+      })
       ;(bcrypt.compareSync as jest.Mock).mockReturnValue(true)
       const user = await loginUser(loginData)
       expect(user).toEqual(output)
@@ -116,7 +131,12 @@ describe('user.service', () => {
     })
 
     it('bad password', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue({ ...output, password: 'crypted pass' })
+      mockPrisma.user.findUnique.mockResolvedValue({
+        ...output,
+        password: 'crypted pass',
+        forgotPassToken: null,
+        forgotPassExpiry: null,
+      })
       ;(bcrypt.compareSync as jest.Mock).mockReturnValue(false)
       await expect(loginUser(loginData)).rejects.toThrow(ValidationError)
     })

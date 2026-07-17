@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json", // Inherit your base settings
+  "compilerOptions": {
+    "rootDir": "./", // Allow top-level folders
+    "types": ["jest", "node"] // Keep your Jest types isolated here
+  },
+  "include": ["src/**/*", "__tests__/**/*"]
+}
